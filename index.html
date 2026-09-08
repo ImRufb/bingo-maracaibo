@@ -343,7 +343,6 @@
       font-size: 1.2rem;
     }
 
-    /* Player Item List in Admin */
     .player-list {
       display: flex;
       flex-direction: column;
@@ -403,7 +402,9 @@
       padding: 2rem;
       border-radius: 1rem;
       width: 90%;
-      max-width: 500px;
+      max-width: 650px;
+      max-height: 90vh;
+      overflow-y: auto;
       box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
     }
 
@@ -599,6 +600,20 @@
     </div>
   </div>
 
+  <!-- MODAL REVELACIÓN GLOBAL DE BINGO -->
+  <div class="modal-overlay" id="modal-reveal-bingo">
+    <div class="modal-content" style="text-align: center;">
+      <h2 style="color: var(--accent); font-size: 1.8rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-trophy"></i> ¡BINGO CANTADO!</h2>
+      <p style="font-size: 1.1rem; margin-bottom: 1.5rem;">Jugador: <strong id="reveal-player-name" style="color: var(--success); font-size: 1.3rem;">--</strong></p>
+      
+      <div id="reveal-cards-container" class="cards-wrapper" style="margin-bottom: 1.5rem;"></div>
+
+      <button type="button" class="btn btn-primary" onclick="closeModal('modal-reveal-bingo')" style="width: 100%; justify-content: center; padding: 0.8rem;">
+        Cerrar y Continuar
+      </button>
+    </div>
+  </div>
+
   <!-- SCRIPTS DE FIREBASE -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -679,6 +694,64 @@
       document.getElementById(modalId).classList.add('active');
     }
 
+    // ESCUCHAR RECLAMOS PÚBLICOS DE BINGO EN TIEMPO REAL
+    function listenForGlobalBingoClaims(roomCode) {
+      const claimsRef = ref(db, `rooms/${roomCode}/claims`);
+      onValue(claimsRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const lastClaimKey = Object.keys(data).pop();
+          const claim = data[lastClaimKey];
+          
+          if (claim && claim.timestamp > Date.now() - 10000) {
+            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+            playBeep(880, 'triangle', 0.5);
+            
+            document.getElementById('reveal-player-name').innerText = claim.playerName;
+            renderRevealedCards(claim.cardsData);
+            openModal('modal-reveal-bingo');
+          }
+        }
+      });
+    }
+
+    function renderRevealedCards(cardsData) {
+      const container = document.getElementById('reveal-cards-container');
+      container.innerHTML = '';
+
+      if (!cardsData || !cardsData.length) return;
+
+      cardsData.forEach((cData, idx) => {
+        const cardBox = document.createElement('div');
+        cardBox.className = 'single-card-container';
+
+        const title = document.createElement('div');
+        title.className = 'card-title';
+        title.innerText = `Tabla #${idx + 1}`;
+        cardBox.appendChild(title);
+
+        const cardEl = document.createElement('div');
+        cardEl.className = 'bingo-card';
+
+        ['B', 'I', 'N', 'G', 'O'].forEach(l => {
+          const h = document.createElement('div');
+          h.className = 'card-header';
+          h.innerText = l;
+          cardEl.appendChild(h);
+        });
+
+        cData.cells.forEach(cellObj => {
+          const cell = document.createElement('div');
+          cell.className = 'card-cell' + (cellObj.isFree ? ' free-space' : '') + (cellObj.marked ? ' marked' : '');
+          cell.innerText = cellObj.val;
+          cardEl.appendChild(cell);
+        });
+
+        cardBox.appendChild(cardEl);
+        container.appendChild(cardBox);
+      });
+    }
+
     // FLUJO ADMIN / HOST
     window.initHostFlow = function() {
       isHost = true;
@@ -696,26 +769,13 @@
       renderMasterBoard();
       showScreen('screen-admin');
 
-      // Escuchar lista de jugadores unidos
       const playersRef = ref(db, `rooms/${currentRoomCode}/players`);
       onValue(playersRef, (snapshot) => {
         const players = snapshot.val() || {};
         renderAdminPlayerList(players);
       });
 
-      // Escuchar reclamos de Bingo
-      const claimsRef = ref(db, `rooms/${currentRoomCode}/claims`);
-      onValue(claimsRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          const lastClaimKey = Object.keys(data).pop();
-          const claim = data[lastClaimKey];
-          if (claim && claim.timestamp > Date.now() - 5000) {
-            playBeep(880, 'triangle', 0.5);
-            alert(`¡EL JUGADOR ${claim.playerName.toUpperCase()} HA CANTADO BINGO!`);
-          }
-        }
-      });
+      listenForGlobalBingoClaims(currentRoomCode);
     };
 
     function renderAdminPlayerList(players) {
@@ -827,14 +887,12 @@
       playerId = 'player_' + Math.random().toString(36).substr(2, 9);
       isHost = false;
 
-      // Registrar jugador en la sala
       const myPlayerRef = ref(db, `rooms/${currentRoomCode}/players/${playerId}`);
       set(myPlayerRef, {
         name: playerName,
         cardsCount: 1
       });
 
-      // Escuchar cambios en la asignación de tablas por el Admin
       onValue(myPlayerRef, (snapshot) => {
         const val = snapshot.val();
         if (val && val.cardsCount && val.cardsCount !== myCardsCount) {
@@ -844,7 +902,6 @@
         }
       });
 
-      // Escuchar estado de la sala y balotas
       const roomRef = ref(db, `rooms/${currentRoomCode}`);
       onValue(roomRef, (snapshot) => {
         if (!snapshot.exists()) {
@@ -866,13 +923,14 @@
         updateHistory('player-history', drawnBalls);
       });
 
+      listenForGlobalBingoClaims(currentRoomCode);
+
       closeModal('modal-join');
       document.getElementById('player-room-code').innerText = currentRoomCode;
       renderPlayerCards(1);
       showScreen('screen-player');
     });
 
-    // RENDERIZAR TABLAS DEL JUGADOR
     function renderPlayerCards(count) {
       const wrapper = document.getElementById('player-cards-wrapper');
       wrapper.innerHTML = '';
@@ -927,18 +985,40 @@
       }
     }
 
+    // EXTRAER MATRIZ DE TABLAS PARA TRANSMISIÓN PÚBLICA
+    function getPlayerCardsData() {
+      const cardContainers = document.querySelectorAll('#player-cards-wrapper .single-card-container');
+      const result = [];
+
+      cardContainers.forEach(container => {
+        const cells = container.querySelectorAll('.card-cell');
+        const cellsData = [];
+
+        cells.forEach(cell => {
+          cellsData.push({
+            val: cell.innerText,
+            marked: cell.classList.contains('marked'),
+            isFree: cell.classList.contains('free-space')
+          });
+        });
+
+        result.push({ cells: cellsData });
+      });
+
+      return result;
+    }
+
     document.getElementById('btn-claim-bingo').addEventListener('click', () => {
-      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-      playBeep(880, 'square', 0.4);
+      const cardsData = getPlayerCardsData();
 
       if (currentRoomCode) {
         const claimsRef = ref(db, `rooms/${currentRoomCode}/claims`);
         push(claimsRef, {
           playerName: playerName,
+          cardsData: cardsData,
           timestamp: Date.now()
         });
       }
-      alert("¡Has cantado BINGO! Se ha enviado la alerta al Cantador.");
     });
 
     document.getElementById('btn-exit').addEventListener('click', () => {
