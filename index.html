@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bingo & Lotería Multijugador Realtime</title>
+  <title>Super Bingo Las Estrellas</title>
   
   <!-- FontAwesome & Google Fonts -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -521,7 +521,7 @@
   <header>
     <div class="logo-title">
       <i class="fa-solid fa-dice"></i>
-      <h1>Bingo Realtime</h1>
+      <h1>Super Bingo Las Estrellas</h1>
     </div>
     <div class="header-actions">
       <button type="button" class="btn btn-danger" id="btn-exit" style="display:none;"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
@@ -541,7 +541,7 @@
         <div class="role-card" onclick="initHostFlow()">
           <i class="fa-solid fa-crown"></i>
           <h2>Crear Sala (Admin / Cantador)</h2>
-          <p>Genera una sala, canta las balotas en vivo y administra las tablas de los jugadores.</p>
+          <p>Genera una sala, canta las Bolas en vivo y administra las tablas de los jugadores.</p>
         </div>
         <div class="role-card" onclick="initPlayerFlow()">
           <i class="fa-solid fa-ticket"></i>
@@ -570,7 +570,7 @@
 
           <div style="display: flex; flex-direction: column; gap: 0.75rem;">
             <button type="button" class="btn btn-primary" id="btn-draw-ball" style="justify-content: center; padding: 0.8rem;">
-              <i class="fa-solid fa-play"></i> SACAR BALOTA
+              <i class="fa-solid fa-play"></i> SACAR Bola
             </button>
             <button type="button" class="btn btn-danger" id="btn-reset-game" style="justify-content: center;">
               <i class="fa-solid fa-rotate-right"></i> Reiniciar Juego
@@ -578,12 +578,12 @@
           </div>
 
           <div style="margin-top: 1.2rem;">
-            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Balotas Salidas:</label>
+            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Bolas Salidas:</label>
             <div class="history-scroll-box" id="admin-history"></div>
           </div>
         </div>
 
-        <!-- Panel Maestro de Balotas -->
+        <!-- Panel Maestro de Bolas -->
         <div class="panel">
           <div class="panel-header">Panel Maestro (1 - 75)</div>
           <div class="master-board" id="admin-master-board"></div>
@@ -624,16 +624,16 @@
           </div>
         </div>
 
-        <!-- Panel Balota Cantada e Historial -->
+        <!-- Panel Bola Cantada e Historial -->
         <div class="panel">
-          <div class="panel-header">Última Balota Cantada</div>
+          <div class="panel-header">Última Bola Cantada</div>
           
           <div class="ball-display-container">
             <span class="ball-letter" id="player-ball-letter">ESPERANDO</span>
             <div class="current-ball" id="player-current-ball">--</div>
           </div>
 
-          <div class="panel-header" style="margin-top: 1rem;">Balotas Salidas</div>
+          <div class="panel-header" style="margin-top: 1rem;">Bolas Salidas</div>
           <div class="history-scroll-box" id="player-history"></div>
         </div>
       </div>
@@ -896,7 +896,7 @@
 
     document.getElementById('btn-draw-ball').addEventListener('click', () => {
       if (drawnBalls.length >= 75) {
-        alert("¡Ya se han sacado todas las balotas!");
+        alert("¡Ya se han sacado todas las Bolas!");
         return;
       }
 
@@ -1164,7 +1164,7 @@
       return arr;
     }
 
-    // ACTUALIZAR HISTORIAL VERTICAL DE BALOTAS CON SCROLL
+    // ACTUALIZAR HISTORIAL VERTICAL DE BolaS CON SCROLL
     function updateHistory(elementId, balls) {
       const container = document.getElementById(elementId);
       container.innerHTML = '';
