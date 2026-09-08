@@ -442,15 +442,19 @@
     }
 
     .history-pill {
-      min-width: 36px;
-      height: 36px;
-      border-radius: 50%;
+      min-width: 52px;
+      height: 38px;
+      padding: 0 0.4rem;
+      border-radius: 0.5rem;
       background: var(--border-color);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 700;
-      font-size: 0.9rem;
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: var(--accent);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      white-space: nowrap;
     }
   </style>
 </head>
@@ -1039,6 +1043,7 @@
       return arr;
     }
 
+    // ACTUALIZAR HISTORIAL CON LETRA Y NÚMERO (Ej. B-12, N-38)
     function updateHistory(elementId, balls) {
       const container = document.getElementById(elementId);
       container.innerHTML = '';
@@ -1046,7 +1051,7 @@
       recent.forEach(b => {
         const pill = document.createElement('div');
         pill.className = 'history-pill';
-        pill.innerText = b;
+        pill.innerText = `${getBallLetter(b)}-${b}`;
         container.appendChild(pill);
       });
     }
