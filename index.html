@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bingo & Lotería Multijugador Realtime</title>
   
-  <!-- FontAwesome e Google Fonts -->
+  <!-- FontAwesome & Google Fonts -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet" />
   <!-- Canvas Confetti -->
@@ -113,11 +113,9 @@
       gap: 1.5rem;
     }
 
-    /* Screen Selectors */
     .view-screen { display: none; }
     .view-screen.active { display: block; }
 
-    /* Role Choice Screen */
     .role-cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -150,7 +148,6 @@
     .role-card h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
     .role-card p { color: var(--text-muted); font-size: 0.95rem; }
 
-    /* Layout for Gameplay */
     .game-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -158,12 +155,8 @@
     }
 
     @media (min-width: 900px) {
-      .game-grid.admin-mode {
-        grid-template-columns: 350px 1fr;
-      }
-      .game-grid.player-mode {
-        grid-template-columns: 1fr 380px;
-      }
+      .game-grid.admin-mode { grid-template-columns: 350px 1fr; }
+      .game-grid.player-mode { grid-template-columns: 1fr 380px; }
     }
 
     .panel {
@@ -186,7 +179,6 @@
       padding-bottom: 0.5rem;
     }
 
-    /* Ball Display */
     .ball-display-container {
       display: flex;
       flex-direction: column;
@@ -211,7 +203,6 @@
       font-weight: 900;
       box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 -5px 10px rgba(0,0,0,0.3);
       margin-bottom: 1rem;
-      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     .ball-letter {
@@ -222,7 +213,6 @@
       letter-spacing: 2px;
     }
 
-    /* Master Board */
     .master-board {
       display: grid;
       grid-template-columns: repeat(15, 1fr);
@@ -249,7 +239,6 @@
       box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
     }
 
-    /* Player Bingo Card */
     .bingo-card {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -285,9 +274,7 @@
       transition: all 0.2s ease;
     }
 
-    .card-cell:hover {
-      background: #475569;
-    }
+    .card-cell:hover { background: #475569; }
 
     .card-cell.marked::after {
       content: '';
@@ -312,7 +299,6 @@
       100% { transform: scale(1); }
     }
 
-    /* Room Code Banner */
     .room-banner {
       background: linear-gradient(90deg, #3b82f6, #1d4ed8);
       padding: 0.75rem 1rem;
@@ -333,7 +319,6 @@
       font-size: 1.2rem;
     }
 
-    /* Modals */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -363,14 +348,9 @@
       box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
     }
 
-    .modal-content h3 {
-      margin-bottom: 1rem;
-      color: var(--accent);
-    }
+    .modal-content h3 { margin-bottom: 1rem; color: var(--accent); }
 
-    .form-group {
-      margin-bottom: 1.2rem;
-    }
+    .form-group { margin-bottom: 1.2rem; }
 
     .form-group label {
       display: block;
@@ -394,7 +374,6 @@
       border-color: var(--accent);
     }
 
-    /* History Pill */
     .history-list {
       display: flex;
       gap: 0.5rem;
@@ -423,7 +402,6 @@
       <h1>Bingo Realtime</h1>
     </div>
     <div class="header-actions">
-      <button type="button" class="btn" id="btn-config-db"><i class="fa-solid fa-gear"></i> Configurar Firebase</button>
       <button type="button" class="btn btn-danger" id="btn-exit" style="display:none;"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
     </div>
   </header>
@@ -455,7 +433,7 @@
     <div id="screen-admin" class="view-screen">
       <div class="room-banner">
         <span>CÓDIGO DE SALA: <strong class="room-code-badge" id="admin-room-code">----</strong></span>
-        <span id="admin-players-count"><i class="fa-solid fa-users"></i> 0 Jugadores</span>
+        <span id="admin-players-count"><i class="fa-solid fa-users"></i> Cantador en Vivo</span>
       </div>
 
       <div class="game-grid admin-mode">
@@ -530,36 +508,6 @@
 
   </div>
 
-  <!-- MODAL CONFIGURACIÓN FIREBASE -->
-  <div class="modal-overlay" id="modal-config">
-    <div class="modal-content">
-      <h3><i class="fa-solid fa-database"></i> Configuración de Firebase</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
-        Ingresa las credenciales de tu proyecto Realtime Database para habilitar la conexión multijugador en vivo.
-      </p>
-
-      <form id="firebase-form">
-        <div class="form-group">
-          <label>API Key</label>
-          <input type="text" class="form-control" id="cfg-apiKey" required />
-        </div>
-        <div class="form-group">
-          <label>Database URL</label>
-          <input type="text" class="form-control" id="cfg-databaseURL" placeholder="https://tu-proyecto-rtdb.firebaseio.com" required />
-        </div>
-        <div class="form-group">
-          <label>Project ID</label>
-          <input type="text" class="form-control" id="cfg-projectId" required />
-        </div>
-
-        <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem;">
-          <button type="button" class="btn" id="btn-close-config">Cancelar</button>
-          <button type="button" class="btn btn-primary" id="btn-save-firebase">Guardar y Conectar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
   <!-- MODAL UNIRSE A SALA -->
   <div class="modal-overlay" id="modal-join">
     <div class="modal-content">
@@ -581,19 +529,33 @@
     </div>
   </div>
 
-  <!-- SCRIPTS DE FIREBASE (v10 modular vía CDN) -->
+  <!-- SCRIPTS DE FIREBASE -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, set, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // =========================================================
+    // REEMPLAZA ESTOS VALORES CON TUS CREDENCIALES DE FIREBASE:
+    // =========================================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyDM5Izn20cNvOx6bWgyNGuXOqGcmFK7Jng",
+      authDomain: "bingo-maracaibo.firebaseapp.com",
+      databaseURL: "https://bingo-maracaibo-default-rtdb.firebaseio.com",
+      projectId: "bingo-maracaibo",
+      storageBucket: "bingo-maracaibo.firebasestorage.app",
+      messagingSenderId: "806438340284",
+      appId: "1:806438340284:web:e196ba1a10601f7dce32b9"
+    };
+
+    // Inicialización automática
+    const firebaseApp = initializeApp(firebaseConfig);
+    const db = getDatabase(firebaseApp);
 
     // ESTADO GLOBAL
-    let firebaseApp = null;
-    let db = null;
     let currentRoomCode = null;
     let isHost = false;
     let playerName = "Jugador";
     let drawnBalls = [];
-    let playerCardMatrix = [];
 
     // AUDIO SYNTHESIZER
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -611,7 +573,7 @@
       osc.stop(audioCtx.currentTime + duration);
     }
 
-    // VOZ DE CANTADOR (Speech Synthesis)
+    // VOZ DE CANTADOR (Web Speech API)
     function speakBall(number) {
       if ('speechSynthesis' in window) {
         const letter = getBallLetter(number);
@@ -631,7 +593,6 @@
       return 'O';
     }
 
-    // NAVEGACIÓN Y PANTALLAS
     function showScreen(screenId) {
       document.querySelectorAll('.view-screen').forEach(s => s.classList.remove('active'));
       document.getElementById(screenId).classList.add('active');
@@ -646,88 +607,23 @@
       document.getElementById(modalId).classList.add('active');
     }
 
-    // INICIALIZACIÓN DE FIREBASE
-    function initFirebaseConfig() {
-      const savedConfig = localStorage.getItem('bingo_firebase_config');
-      if (savedConfig) {
-        try {
-          const config = JSON.parse(savedConfig);
-          firebaseApp = initializeApp(config);
-          db = getDatabase(firebaseApp);
-          return true;
-        } catch (e) {
-          console.error("Error inicializando Firebase:", e);
-        }
-      }
-      return false;
-    }
-
-    // EVENTOS DE CONFIGURACIÓN FIREBASE (SIN REINICIO DE PÁGINA)
-    document.getElementById('btn-config-db').addEventListener('click', () => {
-      const savedConfig = localStorage.getItem('bingo_firebase_config');
-      if (savedConfig) {
-        const cfg = JSON.parse(savedConfig);
-        document.getElementById('cfg-apiKey').value = cfg.apiKey || '';
-        document.getElementById('cfg-databaseURL').value = cfg.databaseURL || '';
-        document.getElementById('cfg-projectId').value = cfg.projectId || '';
-      }
-      openModal('modal-config');
-    });
-
-    document.getElementById('btn-close-config').addEventListener('click', () => {
-      closeModal('modal-config');
-    });
-
-    // CORRECCIÓN CLAVE: type="button" y e.preventDefault() evitan la recarga
-    document.getElementById('btn-save-firebase').addEventListener('click', (e) => {
-      e.preventDefault(); // Previene recarga de página
-
-      const apiKey = document.getElementById('cfg-apiKey').value.trim();
-      const databaseURL = document.getElementById('cfg-databaseURL').value.trim();
-      const projectId = document.getElementById('cfg-projectId').value.trim();
-
-      if (!apiKey || !databaseURL || !projectId) {
-        alert("Por favor completa todos los campos de configuración.");
-        return;
-      }
-
-      const config = { apiKey, databaseURL, projectId };
-      localStorage.setItem('bingo_firebase_config', JSON.stringify(config));
-
-      if (initFirebaseConfig()) {
-        alert("¡Configuración de Firebase guardada y conectada con éxito!");
-        closeModal('modal-config');
-      } else {
-        alert("Error al conectar con las credenciales ingresadas.");
-      }
-    });
-
     // FLUJO ADMIN / HOST
     window.initHostFlow = function() {
-      if (!db && !initFirebaseConfig()) {
-        alert("Debes configurar las credenciales de Firebase antes de crear una sala.");
-        openModal('modal-config');
-        return;
-      }
-
       isHost = true;
       currentRoomCode = Math.floor(1000 + Math.random() * 9000).toString();
       drawnBalls = [];
 
-      // Crear sala en Firebase
       const roomRef = ref(db, `rooms/${currentRoomCode}`);
       set(roomRef, {
         createdAt: Date.now(),
         drawnBalls: [],
-        lastBall: null,
-        status: 'active'
+        lastBall: null
       });
 
       document.getElementById('admin-room-code').innerText = currentRoomCode;
       renderMasterBoard();
       showScreen('screen-admin');
 
-      // Escuchar reclamaciones de Bingo
       const claimsRef = ref(db, `rooms/${currentRoomCode}/claims`);
       onValue(claimsRef, (snapshot) => {
         const data = snapshot.val();
@@ -736,7 +632,7 @@
           const claim = data[lastClaimKey];
           if (claim && claim.timestamp > Date.now() - 5000) {
             playBeep(880, 'triangle', 0.5);
-            alert(`¡JUGADOR ${claim.playerName} HA CANTADO BINGO!`);
+            alert(`¡EL JUGADOR ${claim.playerName.toUpperCase()} HA CANTADO BINGO!`);
           }
         }
       });
@@ -765,8 +661,7 @@
       } while (drawnBalls.includes(ball));
 
       drawnBalls.push(ball);
-      
-      // Actualizar interfaz Admin
+
       document.getElementById('admin-current-ball').innerText = ball;
       document.getElementById('admin-ball-letter').innerText = getBallLetter(ball);
       renderMasterBoard();
@@ -774,7 +669,6 @@
       speakBall(ball);
       playBeep(600, 'sine', 0.15);
 
-      // Sincronizar en Firebase
       update(ref(db, `rooms/${currentRoomCode}`), {
         drawnBalls: drawnBalls,
         lastBall: ball
@@ -782,13 +676,13 @@
     });
 
     document.getElementById('btn-reset-game').addEventListener('click', () => {
-      if (confirm("¿Seguro que deseas reiniciar el juego de esta sala?")) {
+      if (confirm("¿Seguro que deseas reiniciar el juego?")) {
         drawnBalls = [];
         document.getElementById('admin-current-ball').innerText = '--';
         document.getElementById('admin-ball-letter').innerText = 'LISTO';
         renderMasterBoard();
         document.getElementById('admin-history').innerHTML = '';
-        
+
         set(ref(db, `rooms/${currentRoomCode}`), {
           createdAt: Date.now(),
           drawnBalls: [],
@@ -799,11 +693,6 @@
 
     // FLUJO JUGADOR
     window.initPlayerFlow = function() {
-      if (!db && !initFirebaseConfig()) {
-        alert("Debes configurar las credenciales de Firebase antes de unirte a una sala.");
-        openModal('modal-config');
-        return;
-      }
       openModal('modal-join');
     };
 
@@ -820,18 +709,16 @@
       playerName = name;
       isHost = false;
 
-      // Escuchar cambios en la sala desde Firebase
       const roomRef = ref(db, `rooms/${currentRoomCode}`);
       onValue(roomRef, (snapshot) => {
         if (!snapshot.exists()) {
-          alert("La sala ingresada no existe.");
+          alert("La sala ingresada no existe. Revisa el código con el Cantador.");
           return;
         }
 
         const data = snapshot.val();
         const serverDrawnBalls = data.drawnBalls || [];
 
-        // Detectar si hay una nueva balota
         if (data.lastBall && (!drawnBalls.length || drawnBalls[drawnBalls.length - 1] !== data.lastBall)) {
           playBeep(523.25, 'sine', 0.2);
           document.getElementById('player-current-ball').innerText = data.lastBall;
@@ -849,12 +736,10 @@
       showScreen('screen-player');
     });
 
-    // GENERADOR DE CARTÓN JUGADOR
     function generatePlayerCard() {
       const cardEl = document.getElementById('player-bingo-card');
       cardEl.innerHTML = '';
 
-      // Encabezados B-I-N-G-O
       ['B', 'I', 'N', 'G', 'O'].forEach(letter => {
         const h = document.createElement('div');
         h.className = 'card-header';
@@ -862,7 +747,6 @@
         cardEl.appendChild(h);
       });
 
-      // Generar columnas
       const columns = [
         getRandomNumbers(1, 15, 5),
         getRandomNumbers(16, 30, 5),
@@ -871,19 +755,15 @@
         getRandomNumbers(61, 75, 5)
       ];
 
-      playerCardMatrix = [];
-
       for (let row = 0; row < 5; row++) {
         for (let col = 0; col < 5; col++) {
           const cell = document.createElement('div');
-          
           if (row === 2 && col === 2) {
             cell.className = 'card-cell free-space marked';
             cell.innerText = 'LIBRE';
           } else {
-            const val = columns[col][row];
             cell.className = 'card-cell';
-            cell.innerText = val;
+            cell.innerText = columns[col][row];
             cell.addEventListener('click', () => {
               cell.classList.toggle('marked');
               playBeep(400, 'sine', 0.05);
@@ -895,7 +775,7 @@
     }
 
     document.getElementById('btn-new-card').addEventListener('click', () => {
-      if (confirm("¿Deseas generar un nuevo cartón? Se perderán tus marcas actuales.")) {
+      if (confirm("¿Deseas generar un nuevo cartón?")) {
         generatePlayerCard();
       }
     });
@@ -904,24 +784,22 @@
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       playBeep(880, 'square', 0.4);
 
-      if (db && currentRoomCode) {
+      if (currentRoomCode) {
         const claimsRef = ref(db, `rooms/${currentRoomCode}/claims`);
         push(claimsRef, {
           playerName: playerName,
           timestamp: Date.now()
         });
       }
-      alert("¡Has cantado BINGO! Tu notificación ha sido enviada al Cantador.");
+      alert("¡Has cantado BINGO! Se ha enviado la alerta al Cantador.");
     });
 
-    // BOTÓN SALIR
     document.getElementById('btn-exit').addEventListener('click', () => {
-      if (confirm("¿Seguro que deseas salir de la sala actual?")) {
+      if (confirm("¿Seguro que deseas salir?")) {
         showScreen('screen-welcome');
       }
     });
 
-    // UTILIDADES
     function getRandomNumbers(min, max, count) {
       const arr = [];
       while (arr.length < count) {
@@ -942,9 +820,6 @@
         container.appendChild(pill);
       });
     }
-
-    // Auto-inicializar al cargar si existen credenciales
-    initFirebaseConfig();
   </script>
 </body>
 </html>
