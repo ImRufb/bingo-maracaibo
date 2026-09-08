@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Super Bingo Las Estrellas</title>
+  <title>Bingo & Lotería Multijugador Realtime</title>
   
   <!-- FontAwesome & Google Fonts -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -330,6 +330,12 @@
       animation: pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
+    .card-cell.winning-cell {
+      border: 2px solid #10b981;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
+      animation: pulse 1s infinite alternate;
+    }
+
     .card-cell.free-space {
       background: rgba(16, 185, 129, 0.15);
       color: var(--success);
@@ -340,6 +346,11 @@
     @keyframes pop {
       0% { transform: scale(0); }
       100% { transform: scale(1); }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.05); }
     }
 
     .room-banner {
@@ -510,7 +521,7 @@
   <header>
     <div class="logo-title">
       <i class="fa-solid fa-dice"></i>
-      <h1>Super Bingo Las Estrellas</h1>
+      <h1>Bingo Realtime</h1>
     </div>
     <div class="header-actions">
       <button type="button" class="btn btn-danger" id="btn-exit" style="display:none;"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
@@ -791,9 +802,15 @@
           cardEl.appendChild(h);
         });
 
-        cData.cells.forEach(cellObj => {
+        const winningIndices = cData.winningIndices || [];
+
+        cData.cells.forEach((cellObj, cellIdx) => {
           const cell = document.createElement('div');
-          cell.className = 'card-cell' + (cellObj.isFree ? ' free-space' : '') + (cellObj.marked ? ' marked' : '');
+          const isWinner = winningIndices.includes(cellIdx);
+          cell.className = 'card-cell' + 
+            (cellObj.isFree ? ' free-space' : '') + 
+            (cellObj.marked ? ' marked' : '') +
+            (isWinner ? ' winning-cell' : '');
           cell.innerText = cellObj.val;
           cardEl.appendChild(cell);
         });
@@ -1036,37 +1053,94 @@
       }
     }
 
-    // EXTRAER MATRIZ DE TABLAS PARA TRANSMISIÓN PÚBLICA
-    function getPlayerCardsData() {
+    // VERIFICACIÓN AUTOMÁTICA DE PATRONES DE BINGO Y VALIDEZ
+    function checkBingoValidation() {
       const cardContainers = document.querySelectorAll('#player-cards-wrapper .single-card-container');
-      const result = [];
+      const cardsDataResult = [];
+      let invalidMarkFound = false;
+      let winningCardIndices = [];
 
-      cardContainers.forEach(container => {
+      const winningLines = [
+        // Horizontales
+        [0, 1, 2, 3, 4], [5, 6, 7, 8, 9], [10, 11, 12, 13, 14], [15, 16, 17, 18, 19], [20, 21, 22, 23, 24],
+        // Verticales
+        [0, 5, 10, 15, 20], [1, 6, 11, 16, 21], [2, 7, 12, 17, 22], [3, 8, 13, 18, 23], [4, 9, 14, 19, 24],
+        // Diagonales
+        [0, 6, 12, 18, 24], [4, 8, 12, 16, 20]
+      ];
+
+      cardContainers.forEach((container) => {
         const cells = container.querySelectorAll('.card-cell');
         const cellsData = [];
+        const markedIndices = [];
 
-        cells.forEach(cell => {
+        cells.forEach((cell, idx) => {
+          const valStr = cell.innerText;
+          const isFree = cell.classList.contains('free-space');
+          const isMarked = cell.classList.contains('marked');
+          const valNum = parseInt(valStr);
+
+          // Verificar si el jugador marcó un número no cantado
+          if (isMarked && !isFree && !drawnBalls.includes(valNum)) {
+            invalidMarkFound = true;
+          }
+
+          if (isMarked) {
+            markedIndices.push(idx);
+          }
+
           cellsData.push({
-            val: cell.innerText,
-            marked: cell.classList.contains('marked'),
-            isFree: cell.classList.contains('free-space')
+            val: valStr,
+            marked: isMarked,
+            isFree: isFree
           });
         });
 
-        result.push({ cells: cellsData });
+        // Detectar líneas ganadoras
+        let cardWinningIndices = [];
+        winningLines.forEach(line => {
+          if (line.every(i => markedIndices.includes(i))) {
+            line.forEach(i => {
+              if (!cardWinningIndices.includes(i)) cardWinningIndices.push(i);
+            });
+          }
+        });
+
+        cardsDataResult.push({
+          cells: cellsData,
+          winningIndices: cardWinningIndices
+        });
+
+        if (cardWinningIndices.length > 0) {
+          winningCardIndices.push(cardWinningIndices);
+        }
       });
 
-      return result;
+      return {
+        isValid: !invalidMarkFound && winningCardIndices.length > 0,
+        invalidMarkFound: invalidMarkFound,
+        cardsData: cardsDataResult
+      };
     }
 
     document.getElementById('btn-claim-bingo').addEventListener('click', () => {
-      const cardsData = getPlayerCardsData();
+      const validation = checkBingoValidation();
+
+      if (validation.invalidMarkFound) {
+        alert("❌ ¡Bingo no válido! Tienes casillas marcadas con números que aún no han sido cantados.");
+        return;
+      }
+
+      if (!validation.isValid) {
+        alert("❌ ¡Aún no tienes Bingo! Debes completar al menos una línea horizontal, vertical o diagonal válida.");
+        return;
+      }
 
       if (currentRoomCode) {
         const claimsRef = ref(db, `rooms/${currentRoomCode}/claims`);
         push(claimsRef, {
           playerName: playerName,
-          cardsData: cardsData,
+          cardsData: validation.cardsData,
           timestamp: Date.now()
         });
       }
