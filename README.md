@@ -1,1 +1,1 @@
-# bingo-maracaibo
+# super-bingo-las-estrellas
