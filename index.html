@@ -45,7 +45,7 @@
 
     header {
       width: 100%;
-      max-width: 1100px;
+      max-width: 1200px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -100,6 +100,11 @@
       transform: translateY(-1px);
     }
 
+    .btn-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.85rem;
+    }
+
     .btn-primary { background: var(--accent); color: #000; }
     .btn-success { background: var(--success); color: #fff; }
     .btn-danger { background: var(--danger); color: #fff; }
@@ -107,7 +112,7 @@
 
     .main-container {
       width: 100%;
-      max-width: 1100px;
+      max-width: 1200px;
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
@@ -154,9 +159,9 @@
       gap: 1.5rem;
     }
 
-    @media (min-width: 900px) {
-      .game-grid.admin-mode { grid-template-columns: 350px 1fr; }
-      .game-grid.player-mode { grid-template-columns: 1fr 380px; }
+    @media (min-width: 950px) {
+      .game-grid.admin-mode { grid-template-columns: 320px 1fr 300px; }
+      .game-grid.player-mode { grid-template-columns: 1fr 340px; }
     }
 
     .panel {
@@ -191,18 +196,18 @@
     }
 
     .current-ball {
-      width: 120px;
-      height: 120px;
+      width: 110px;
+      height: 110px;
       border-radius: 50%;
       background: radial-gradient(circle at 30% 30%, #fbbf24, #d97706);
       color: #000;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 3rem;
+      font-size: 2.8rem;
       font-weight: 900;
       box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 -5px 10px rgba(0,0,0,0.3);
-      margin-bottom: 1rem;
+      margin-bottom: 0.5rem;
     }
 
     .ball-letter {
@@ -239,13 +244,32 @@
       box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
     }
 
+    /* Player Cards Container */
+    .cards-wrapper {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .single-card-container {
+      background: rgba(0,0,0,0.2);
+      padding: 12px;
+      border-radius: 0.75rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .card-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+
     .bingo-card {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
-      background: rgba(0,0,0,0.2);
-      padding: 10px;
-      border-radius: 0.75rem;
+      gap: 6px;
     }
 
     .card-header {
@@ -254,20 +278,20 @@
       align-items: center;
       justify-content: center;
       font-weight: 900;
-      font-size: 1.3rem;
+      font-size: 1.1rem;
       color: var(--accent);
       background: rgba(245, 158, 11, 0.1);
-      border-radius: 6px;
+      border-radius: 4px;
     }
 
     .card-cell {
       aspect-ratio: 1;
       background: var(--border-color);
-      border-radius: 6px;
+      border-radius: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: 700;
       cursor: pointer;
       position: relative;
@@ -291,7 +315,7 @@
     .card-cell.free-space {
       background: rgba(16, 185, 129, 0.2);
       color: var(--success);
-      font-size: 0.8rem;
+      font-size: 0.75rem;
     }
 
     @keyframes pop {
@@ -317,6 +341,41 @@
       letter-spacing: 2px;
       font-family: monospace;
       font-size: 1.2rem;
+    }
+
+    /* Player Item List in Admin */
+    .player-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .player-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0,0,0,0.2);
+      padding: 0.6rem 0.8rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .player-info-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .player-info-cards {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
     }
 
     .modal-overlay {
@@ -419,12 +478,12 @@
         <div class="role-card" onclick="initHostFlow()">
           <i class="fa-solid fa-crown"></i>
           <h2>Crear Sala (Admin / Cantador)</h2>
-          <p>Genera una sala, canta las balotas en vivo y verifica las victorias de los jugadores.</p>
+          <p>Genera una sala, canta las balotas en vivo y administra las tablas de los jugadores.</p>
         </div>
         <div class="role-card" onclick="initPlayerFlow()">
           <i class="fa-solid fa-ticket"></i>
           <h2>Unirse a Sala (Jugador)</h2>
-          <p>Ingresa con el código de 4 dígitos, recibe tu cartón y canta ¡BINGO!</p>
+          <p>Ingresa con el código de 4 dígitos, recibe tus cartones y canta ¡BINGO!</p>
         </div>
       </div>
     </div>
@@ -433,12 +492,13 @@
     <div id="screen-admin" class="view-screen">
       <div class="room-banner">
         <span>CÓDIGO DE SALA: <strong class="room-code-badge" id="admin-room-code">----</strong></span>
-        <span id="admin-players-count"><i class="fa-solid fa-users"></i> Cantador en Vivo</span>
+        <span id="admin-players-count"><i class="fa-solid fa-users"></i> 0 Jugadores Conectados</span>
       </div>
 
       <div class="game-grid admin-mode">
+        <!-- Panel Controles Cantador -->
         <div class="panel">
-          <div class="panel-header">Controles del Cantador</div>
+          <div class="panel-header">Cantador</div>
           
           <div class="ball-display-container">
             <span class="ball-letter" id="admin-ball-letter">LISTO</span>
@@ -446,7 +506,7 @@
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <button type="button" class="btn btn-primary" id="btn-draw-ball" style="justify-content: center; padding: 1rem;">
+            <button type="button" class="btn btn-primary" id="btn-draw-ball" style="justify-content: center; padding: 0.8rem;">
               <i class="fa-solid fa-play"></i> SACAR BALOTA
             </button>
             <button type="button" class="btn btn-danger" id="btn-reset-game" style="justify-content: center;">
@@ -454,15 +514,26 @@
             </button>
           </div>
 
-          <div style="margin-top: 1.5rem;">
+          <div style="margin-top: 1.2rem;">
             <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Últimas Balotas:</label>
             <div class="history-list" id="admin-history"></div>
           </div>
         </div>
 
+        <!-- Panel Maestro de Balotas -->
         <div class="panel">
-          <div class="panel-header">Panel Maestro de Balotas (1 - 75)</div>
+          <div class="panel-header">Panel Maestro (1 - 75)</div>
           <div class="master-board" id="admin-master-board"></div>
+        </div>
+
+        <!-- Panel Administrador de Jugadores y Tablas -->
+        <div class="panel">
+          <div class="panel-header"><i class="fa-solid fa-users-gear"></i> Jugadores y Tablas</div>
+          <div class="player-list" id="admin-player-list">
+            <div style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 1rem;">
+              Esperando que se unan jugadores...
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -475,15 +546,13 @@
       </div>
 
       <div class="game-grid player-mode">
+        <!-- Tablas del Jugador -->
         <div class="panel">
           <div class="panel-header">
-            <span>Tu Cartón de Bingo</span>
-            <button type="button" class="btn btn-info" id="btn-new-card" style="font-size: 0.8rem; padding: 0.3rem 0.6rem;">
-              <i class="fa-solid fa-arrows-rotate"></i> Cambiar
-            </button>
+            <span>Tus Cartones (<span id="player-cards-count">1</span>)</span>
           </div>
 
-          <div class="bingo-card" id="player-bingo-card"></div>
+          <div class="cards-wrapper" id="player-cards-wrapper"></div>
 
           <div style="margin-top: 1.5rem;">
             <button type="button" class="btn btn-primary" id="btn-claim-bingo" style="width: 100%; justify-content: center; padding: 1rem; font-size: 1.2rem; font-weight: 800;">
@@ -492,6 +561,7 @@
           </div>
         </div>
 
+        <!-- Panel Balota Cantada e Historial -->
         <div class="panel">
           <div class="panel-header">Última Balota Cantada</div>
           
@@ -532,7 +602,7 @@
   <!-- SCRIPTS DE FIREBASE -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, set, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     // =========================================================
     // REEMPLAZA ESTOS VALORES CON TUS CREDENCIALES DE FIREBASE:
@@ -547,17 +617,19 @@
       appId: "1:806438340284:web:e196ba1a10601f7dce32b9"
     };
 
-    // Inicialización automática
+    // Inicialización de Firebase
     const firebaseApp = initializeApp(firebaseConfig);
     const db = getDatabase(firebaseApp);
 
     // ESTADO GLOBAL
     let currentRoomCode = null;
     let isHost = false;
+    let playerId = null;
     let playerName = "Jugador";
     let drawnBalls = [];
+    let myCardsCount = 1;
 
-    // AUDIO SYNTHESIZER
+    // SINTETIZADOR DE SONIDO
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playBeep(freq = 440, type = 'sine', duration = 0.1) {
       if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -573,7 +645,7 @@
       osc.stop(audioCtx.currentTime + duration);
     }
 
-    // VOZ DE CANTADOR (Web Speech API)
+    // VOZ DEL CANTADOR
     function speakBall(number) {
       if ('speechSynthesis' in window) {
         const letter = getBallLetter(number);
@@ -624,6 +696,14 @@
       renderMasterBoard();
       showScreen('screen-admin');
 
+      // Escuchar lista de jugadores unidos
+      const playersRef = ref(db, `rooms/${currentRoomCode}/players`);
+      onValue(playersRef, (snapshot) => {
+        const players = snapshot.val() || {};
+        renderAdminPlayerList(players);
+      });
+
+      // Escuchar reclamos de Bingo
       const claimsRef = ref(db, `rooms/${currentRoomCode}/claims`);
       onValue(claimsRef, (snapshot) => {
         const data = snapshot.val();
@@ -635,6 +715,43 @@
             alert(`¡EL JUGADOR ${claim.playerName.toUpperCase()} HA CANTADO BINGO!`);
           }
         }
+      });
+    };
+
+    function renderAdminPlayerList(players) {
+      const listEl = document.getElementById('admin-player-list');
+      const keys = Object.keys(players);
+      
+      document.getElementById('admin-players-count').innerHTML = `<i class="fa-solid fa-users"></i> ${keys.length} Jugadores`;
+
+      if (keys.length === 0) {
+        listEl.innerHTML = `<div style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 1rem;">Esperando jugadores...</div>`;
+        return;
+      }
+
+      listEl.innerHTML = '';
+      keys.forEach(id => {
+        const p = players[id];
+        const item = document.createElement('div');
+        item.className = 'player-item';
+        item.innerHTML = `
+          <div>
+            <div class="player-info-name">${p.name}</div>
+            <div class="player-info-cards">${p.cardsCount || 1} tabla(s)</div>
+          </div>
+          <div class="player-controls">
+            <button type="button" class="btn btn-sm btn-danger" onclick="modifyPlayerCards('${id}', ${(p.cardsCount || 1) - 1})">-</button>
+            <button type="button" class="btn btn-sm btn-success" onclick="modifyPlayerCards('${id}', ${(p.cardsCount || 1) + 1})">+</button>
+          </div>
+        `;
+        listEl.appendChild(item);
+      });
+    }
+
+    window.modifyPlayerCards = function(pId, newCount) {
+      if (newCount < 1) return;
+      update(ref(db, `rooms/${currentRoomCode}/players/${pId}`), {
+        cardsCount: newCount
       });
     };
 
@@ -707,12 +824,31 @@
 
       currentRoomCode = code;
       playerName = name;
+      playerId = 'player_' + Math.random().toString(36).substr(2, 9);
       isHost = false;
 
+      // Registrar jugador en la sala
+      const myPlayerRef = ref(db, `rooms/${currentRoomCode}/players/${playerId}`);
+      set(myPlayerRef, {
+        name: playerName,
+        cardsCount: 1
+      });
+
+      // Escuchar cambios en la asignación de tablas por el Admin
+      onValue(myPlayerRef, (snapshot) => {
+        const val = snapshot.val();
+        if (val && val.cardsCount && val.cardsCount !== myCardsCount) {
+          myCardsCount = val.cardsCount;
+          document.getElementById('player-cards-count').innerText = myCardsCount;
+          renderPlayerCards(myCardsCount);
+        }
+      });
+
+      // Escuchar estado de la sala y balotas
       const roomRef = ref(db, `rooms/${currentRoomCode}`);
       onValue(roomRef, (snapshot) => {
         if (!snapshot.exists()) {
-          alert("La sala ingresada no existe. Revisa el código con el Cantador.");
+          alert("La sala ingresada no existe.");
           return;
         }
 
@@ -732,53 +868,64 @@
 
       closeModal('modal-join');
       document.getElementById('player-room-code').innerText = currentRoomCode;
-      generatePlayerCard();
+      renderPlayerCards(1);
       showScreen('screen-player');
     });
 
-    function generatePlayerCard() {
-      const cardEl = document.getElementById('player-bingo-card');
-      cardEl.innerHTML = '';
+    // RENDERIZAR TABLAS DEL JUGADOR
+    function renderPlayerCards(count) {
+      const wrapper = document.getElementById('player-cards-wrapper');
+      wrapper.innerHTML = '';
 
-      ['B', 'I', 'N', 'G', 'O'].forEach(letter => {
-        const h = document.createElement('div');
-        h.className = 'card-header';
-        h.innerText = letter;
-        cardEl.appendChild(h);
-      });
+      for (let c = 1; c <= count; c++) {
+        const cardContainer = document.createElement('div');
+        cardContainer.className = 'single-card-container';
+        
+        const title = document.createElement('div');
+        title.className = 'card-title';
+        title.innerText = `Tabla #${c}`;
+        cardContainer.appendChild(title);
 
-      const columns = [
-        getRandomNumbers(1, 15, 5),
-        getRandomNumbers(16, 30, 5),
-        getRandomNumbers(31, 45, 5),
-        getRandomNumbers(46, 60, 5),
-        getRandomNumbers(61, 75, 5)
-      ];
+        const cardEl = document.createElement('div');
+        cardEl.className = 'bingo-card';
 
-      for (let row = 0; row < 5; row++) {
-        for (let col = 0; col < 5; col++) {
-          const cell = document.createElement('div');
-          if (row === 2 && col === 2) {
-            cell.className = 'card-cell free-space marked';
-            cell.innerText = 'LIBRE';
-          } else {
-            cell.className = 'card-cell';
-            cell.innerText = columns[col][row];
-            cell.addEventListener('click', () => {
-              cell.classList.toggle('marked');
-              playBeep(400, 'sine', 0.05);
-            });
+        ['B', 'I', 'N', 'G', 'O'].forEach(letter => {
+          const h = document.createElement('div');
+          h.className = 'card-header';
+          h.innerText = letter;
+          cardEl.appendChild(h);
+        });
+
+        const columns = [
+          getRandomNumbers(1, 15, 5),
+          getRandomNumbers(16, 30, 5),
+          getRandomNumbers(31, 45, 5),
+          getRandomNumbers(46, 60, 5),
+          getRandomNumbers(61, 75, 5)
+        ];
+
+        for (let row = 0; row < 5; row++) {
+          for (let col = 0; col < 5; col++) {
+            const cell = document.createElement('div');
+            if (row === 2 && col === 2) {
+              cell.className = 'card-cell free-space marked';
+              cell.innerText = 'LIBRE';
+            } else {
+              cell.className = 'card-cell';
+              cell.innerText = columns[col][row];
+              cell.addEventListener('click', () => {
+                cell.classList.toggle('marked');
+                playBeep(400, 'sine', 0.05);
+              });
+            }
+            cardEl.appendChild(cell);
           }
-          cardEl.appendChild(cell);
         }
+
+        cardContainer.appendChild(cardEl);
+        wrapper.appendChild(cardContainer);
       }
     }
-
-    document.getElementById('btn-new-card').addEventListener('click', () => {
-      if (confirm("¿Deseas generar un nuevo cartón?")) {
-        generatePlayerCard();
-      }
-    });
 
     document.getElementById('btn-claim-bingo').addEventListener('click', () => {
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
@@ -796,6 +943,9 @@
 
     document.getElementById('btn-exit').addEventListener('click', () => {
       if (confirm("¿Seguro que deseas salir?")) {
+        if (!isHost && currentRoomCode && playerId) {
+          remove(ref(db, `rooms/${currentRoomCode}/players/${playerId}`));
+        }
         showScreen('screen-welcome');
       }
     });
