@@ -434,17 +434,37 @@
       border-color: var(--accent);
     }
 
-    .history-list {
-      display: flex;
+    /* HISTORIAL VERTICAL CON SCROLL */
+    .history-scroll-box {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 0.6rem;
+      max-height: 180px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
       gap: 0.5rem;
-      overflow-x: auto;
-      padding: 0.5rem 0;
+    }
+
+    /* Personalización de la barra de scroll */
+    .history-scroll-box::-webkit-scrollbar {
+      width: 6px;
+    }
+    .history-scroll-box::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+    }
+    .history-scroll-box::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+    .history-scroll-box::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
     }
 
     .history-pill {
-      min-width: 52px;
       height: 38px;
-      padding: 0 0.4rem;
       border-radius: 0.5rem;
       background: var(--border-color);
       display: flex;
@@ -455,7 +475,6 @@
       color: var(--accent);
       border: 1px solid rgba(245, 158, 11, 0.3);
       white-space: nowrap;
-      flex-shrink: 0;
     }
 
     .history-pill.latest {
@@ -529,7 +548,7 @@
 
           <div style="margin-top: 1.2rem;">
             <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Balotas Salidas:</label>
-            <div class="history-list" id="admin-history"></div>
+            <div class="history-scroll-box" id="admin-history"></div>
           </div>
         </div>
 
@@ -584,7 +603,7 @@
           </div>
 
           <div class="panel-header" style="margin-top: 1rem;">Balotas Salidas</div>
-          <div class="history-list" id="player-history"></div>
+          <div class="history-scroll-box" id="player-history"></div>
         </div>
       </div>
     </div>
@@ -1051,21 +1070,22 @@
       return arr;
     }
 
-    // ACTUALIZAR HISTORIAL COMPLETO DE BALOTAS SALIDAS
+    // ACTUALIZAR HISTORIAL VERTICAL DE BALOTAS CON SCROLL
     function updateHistory(elementId, balls) {
       const container = document.getElementById(elementId);
       container.innerHTML = '';
 
-      // Mostramos todas las balotas en orden inverso (las más recientes primero)
       const allBalls = [...balls].reverse();
 
       allBalls.forEach((b, idx) => {
         const pill = document.createElement('div');
-        // Resaltamos la última balota que acaba de salir
         pill.className = 'history-pill' + (idx === 0 ? ' latest' : '');
         pill.innerText = `${getBallLetter(b)}-${b}`;
         container.appendChild(pill);
       });
+      
+      // Auto-scroll hacia arriba al añadir una balota nueva
+      container.scrollTop = 0;
     }
   </script>
 </body>
