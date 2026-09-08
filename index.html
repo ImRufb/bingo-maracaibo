@@ -455,6 +455,14 @@
       color: var(--accent);
       border: 1px solid rgba(245, 158, 11, 0.3);
       white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .history-pill.latest {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+      box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
     }
   </style>
 </head>
@@ -520,7 +528,7 @@
           </div>
 
           <div style="margin-top: 1.2rem;">
-            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Últimas Balotas:</label>
+            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Balotas Salidas:</label>
             <div class="history-list" id="admin-history"></div>
           </div>
         </div>
@@ -575,7 +583,7 @@
             <div class="current-ball" id="player-current-ball">--</div>
           </div>
 
-          <div class="panel-header" style="margin-top: 1rem;">Historial Reciente</div>
+          <div class="panel-header" style="margin-top: 1rem;">Balotas Salidas</div>
           <div class="history-list" id="player-history"></div>
         </div>
       </div>
@@ -633,7 +641,7 @@
       projectId: "bingo-maracaibo",
       storageBucket: "bingo-maracaibo.firebasestorage.app",
       messagingSenderId: "806438340284",
-      appId: "1:806438340284:web:e196ba1a10601f7dce32b9"
+      appId: "1:806438340284:web:e196ba1a10601f7dce32b9",
     };
 
     // Inicialización de Firebase
@@ -1043,14 +1051,18 @@
       return arr;
     }
 
-    // ACTUALIZAR HISTORIAL CON LETRA Y NÚMERO (Ej. B-12, N-38)
+    // ACTUALIZAR HISTORIAL COMPLETO DE BALOTAS SALIDAS
     function updateHistory(elementId, balls) {
       const container = document.getElementById(elementId);
       container.innerHTML = '';
-      const recent = balls.slice(-6).reverse();
-      recent.forEach(b => {
+
+      // Mostramos todas las balotas en orden inverso (las más recientes primero)
+      const allBalls = [...balls].reverse();
+
+      allBalls.forEach((b, idx) => {
         const pill = document.createElement('div');
-        pill.className = 'history-pill';
+        // Resaltamos la última balota que acaba de salir
+        pill.className = 'history-pill' + (idx === 0 ? ' latest' : '');
         pill.innerText = `${getBallLetter(b)}-${b}`;
         container.appendChild(pill);
       });
