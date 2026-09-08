@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gran Bingo Fest - Multijugador en Tiempo Real</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS Styles -->
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: radial-gradient(circle at top center, #2e1065 0%, #0f172a 60%, #020617 100%);
+            min-height: 100vh;
+            color: #f8fafc;
+        }
+
+        .heading-font {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .glass-panel-gold {
+            background: rgba(45, 30, 10, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            70% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(234, 179, 8, 0.5); }
+            50% { box-shadow: 0 0 35px rgba(234, 179, 8, 0.9); }
+        }
+
+        @keyframes ballSpin {
+            0% { transform: rotate(0deg) scale(0.8); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .animate-pop {
+            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .pulse-glow {
+            animation: pulseGlow 2s infinite;
+        }
+
+        .ball-spin {
+            animation: ballSpin 0.5s ease-out forwards;
+        }
+
+        .chip-marker {
+            background: radial-gradient(circle at 35% 35%, #ef4444, #991b1b);
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.7), inset 0 -2px 4px rgba(0, 0, 0, 0.6), 0 4px 10px rgba(0, 0, 0, 0.7);
+            border: 2px dashed rgba(255, 255, 255, 0.85);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(234, 179, 8, 0.4);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(234, 179, 8, 0.7);
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between min-h-screen pb-6">
+
+    <header class="w-full bg-slate-950/80 border-b border-white/10 px-4 py-3 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
+            <!-- Logo Title -->
+            <div class="flex items-center space-x-3 cursor-pointer" id="brandLogo">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20">
+                    <i class="fa-solid fa-dice"></i>
+                </div>
+                <div>
+                    <h1 class="heading-font text-2xl md:text-3xl font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500">
+                        GRAN BINGO FEST
+                    </h1>
+                    <span id="roomBadge" class="text-xs bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30 hidden">
+                        Sala: <strong id="roomCodeDisplay">----</strong>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Header Controls & Firebase Config Status -->
+            <div class="flex items-center space-x-2 text-xs md:text-sm">
+                <!-- Firebase Status Indicator Button -->
+                <button id="btnOpenFirebaseModal" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 transition flex items-center space-x-2 border border-white/10 shadow">
+                    <span id="fbStatusDot" class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
+                    <span id="fbStatusText" class="hidden sm:inline font-semibold text-slate-300">Firebase Off</span>
+                    <i class="fa-solid fa-gear text-amber-400 ml-1"></i>
+                </button>
+
+                <!-- Audio Sound Effects Toggle -->
+                <button id="btnSoundToggle" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 transition flex items-center space-x-2 border border-white/10">
+                    <i id="iconSound" class="fa-solid fa-volume-high text-amber-400"></i>
+                    <span id="txtSound" class="hidden sm:inline">Sonido</span>
+                </button>
+
+                <!-- Audio Voice Synthesizer Toggle -->
+                <button id="btnVoiceToggle" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 transition flex items-center space-x-2 border border-white/10">
+                    <i id="iconVoice" class="fa-solid fa-comment-dots text-emerald-400"></i>
+                    <span id="txtVoice" class="hidden sm:inline">Voz</span>
+                </button>
+
+                <!-- Switch Role / Lobby Button -->
+                <button id="btnChangeRole" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 transition flex items-center space-x-2 font-bold shadow-lg shadow-indigo-600/30">
+                    <i class="fa-solid fa-door-open"></i>
+                    <span class="hidden sm:inline">Lobby</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="roleSelectorScreen" class="max-w-4xl mx-auto w-full px-4 py-8 md:py-12 flex-grow flex flex-col justify-center items-center">
+        <div class="glass-panel w-full rounded-3xl p-6 md:p-10 text-center border border-white/15 shadow-2xl relative overflow-hidden">
+            <!-- Decorative Lights -->
+            <div class="absolute -top-12 -left-12 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-12 -right-12 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <h2 class="heading-font text-3xl md:text-5xl font-black text-amber-300 mb-3 tracking-wide">
+                ¡Bienvenido al Bingo Multijugador!
+            </h2>
+            <p class="text-slate-300 text-sm md:text-base max-w-xl mx-auto mb-8">
+                Crea una sala interactiva como Cantador u únete a la partida de tus amigos en tiempo real desde cualquier dispositivo.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+                <!-- Host/Admin Selection Card -->
+                <div class="glass-panel-gold p-6 rounded-2xl border border-amber-500/30 flex flex-col justify-between space-y-5 hover:border-amber-400 transition duration-300">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-14 h-14 bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 rounded-2xl flex items-center justify-center text-2xl font-black shadow-lg shadow-amber-500/20">
+                            <i class="fa-solid fa-bullhorn"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Modo Cantador</h3>
+                            <span class="text-xs text-amber-300/80 font-mono font-semibold uppercase tracking-wider">Host / Administrador</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Crea una sala única, saca balotas con tómbola animada, utiliza voz automática en español y verifica alertas de BINGO en tiempo real.
+                    </p>
+                    <button id="btnSelectHost" class="w-full py-3.5 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black rounded-xl shadow-lg shadow-amber-500/20 transition transform active:scale-95 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-plus-circle"></i>
+                        <span>CREAR NUEVA SALA</span>
+                    </button>
+                </div>
+
+                <!-- Player Selection Card -->
+                <div class="glass-panel p-6 rounded-2xl border border-indigo-500/30 flex flex-col justify-between space-y-5 hover:border-indigo-400 transition duration-300">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-14 h-14 bg-gradient-to-tr from-indigo-500 to-purple-500 text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-lg shadow-indigo-500/20">
+                            <i class="fa-solid fa-gamepad"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Modo Jugador</h3>
+                            <span class="text-xs text-indigo-300 font-mono font-semibold uppercase tracking-wider">Participante</span>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-xs font-semibold text-slate-300 mb-1 block">Tu Nombre / Apodo:</label>
+                            <input type="text" id="playerNameInput" placeholder="Ej: Carlos Pro" class="w-full bg-slate-900/90 border border-white/20 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-400 font-semibold">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-slate-300 mb-1 block">Código de Sala:</label>
+                            <input type="text" id="roomCodeInput" maxlength="10" placeholder="Ej: BINGO-4921" class="w-full bg-slate-900/90 border border-white/20 rounded-xl px-3.5 py-2.5 text-sm text-amber-300 font-mono font-bold uppercase tracking-widest focus:outline-none focus:border-indigo-400">
+                        </div>
+                    </div>
+
+                    <button id="btnSelectPlayer" class="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-extrabold rounded-xl shadow-lg shadow-indigo-500/20 transition transform active:scale-95 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span>UNIRSE A LA SALA</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main id="mainGameView" class="max-w-7xl mx-auto w-full px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start flex-grow hidden">
+
+        <!-- ================= ADMIN / HOST SECTION ================= -->
+        <section id="hostSection" class="lg:col-span-5 flex flex-col space-y-6">
+            
+            <!-- Tombola Ball Display Panel -->
+            <div class="glass-panel-gold rounded-3xl p-6 text-center flex flex-col items-center justify-center relative overflow-hidden shadow-2xl">
+                <div class="absolute top-3 left-4 text-xs font-bold tracking-wider text-amber-300/90 uppercase flex items-center gap-1.5">
+                    <i class="fa-solid fa-bullhorn text-amber-400"></i> Cantador / Balotera
+                </div>
+
+                <!-- Live Drawn Ball Graphic -->
+                <div class="my-6 relative">
+                    <div id="ballDisplay" class="w-36 h-36 md:w-44 md:h-44 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-300 to-amber-100 text-slate-950 font-black text-6xl md:text-7xl flex flex-col items-center justify-center shadow-2xl border-4 border-amber-200 transform transition-all duration-300">
+                        <span id="ballLetter" class="text-xl md:text-2xl font-black text-amber-900 tracking-widest leading-none">BINGO</span>
+                        <span id="ballNumber" class="leading-none mt-1">--</span>
+                    </div>
+                </div>
+
+                <!-- Draw Actions -->
+                <div class="w-full space-y-3">
+                    <button id="btnDrawBall" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-black text-xl tracking-wide shadow-xl shadow-amber-500/20 transform active:scale-95 transition pulse-glow flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-play"></i>
+                        <span>SACAR BALOTA</span>
+                    </button>
+
+                    <!-- Auto Extraction Controls -->
+                    <div class="glass-panel p-3.5 rounded-2xl flex flex-col space-y-2 text-xs border border-white/10">
+                        <div class="flex justify-between items-center">
+                            <label for="autoPlayToggle" class="flex items-center cursor-pointer space-x-2">
+                                <input type="checkbox" id="autoPlayToggle" class="sr-only peer">
+                                <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 relative"></div>
+                                <span class="font-bold text-slate-200 text-sm">Sorteo Automático</span>
+                            </label>
+                            <span id="speedLabel" class="text-amber-300 font-mono font-bold text-sm">3.0s</span>
+                        </div>
+                        <input type="range" id="speedRange" min="1" max="5" step="0.5" value="3" class="w-full accent-amber-400 cursor-pointer h-1.5 bg-slate-800 rounded-lg">
+                    </div>
+                </div>
+
+                <!-- Recent Drawn Balls History -->
+                <div class="w-full mt-5 text-left">
+                    <div class="text-xs text-amber-300/80 font-bold uppercase mb-2">ÚLTIMAS BALOTAS:</div>
+                    <div id="recentBalls" class="flex space-x-2 overflow-x-auto pb-2 min-h-[52px] items-center">
+                        <span class="text-xs text-slate-400 italic">No han salido balotas aún</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Host Realtime Connected Players Panel -->
+            <div class="glass-panel rounded-3xl p-5 shadow-xl">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-2">
+                        <i class="fa-solid fa-users"></i> Jugadores en la Sala
+                    </h3>
+                    <span id="connectedCount" class="text-xs font-bold bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded-full border border-indigo-500/30">0 Online</span>
+                </div>
+                <div id="connectedPlayersList" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto pr-1">
+                    <span class="text-xs text-slate-400 italic">Esperando que se unan jugadores...</span>
+                </div>
+            </div>
+
+            <!-- Master Board (1-75 Grid) -->
+            <div class="glass-panel rounded-3xl p-5 shadow-xl">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-amber-300 flex items-center gap-2">
+                        <i class="fa-solid fa-table-cells"></i> Tablero Maestro (1-75)
+                    </h3>
+                    <span id="drawnCount" class="text-xs font-bold bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-full border border-amber-500/30">0 / 75</span>
+                </div>
+                <div id="masterBoard" class="grid grid-cols-15 gap-1 text-center text-xs font-bold">
+                    <!-- Javascript populates cells 1-75 -->
+                </div>
+            </div>
+
+            <!-- Host Claim Verification Alerts Panel -->
+            <div id="hostClaimsPanel" class="glass-panel rounded-3xl p-5 shadow-xl border border-red-500/30">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-red-400 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-bell animate-bounce"></i> Reclamaciones de BINGO
+                </h3>
+                <div id="claimsList" class="space-y-3">
+                    <p class="text-xs text-slate-400 italic">No hay reclamaciones de victoria pendientes.</p>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ================= PLAYER SECTION ================= -->
+        <section id="playerSection" class="lg:col-span-7 flex flex-col space-y-6">
+            
+            <div class="glass-panel rounded-3xl p-6 shadow-2xl relative">
+                
+                <!-- Player Live Ball Notification Bar -->
+                <div id="playerLastBallBar" class="mb-5 p-3 rounded-2xl bg-indigo-900/40 border border-indigo-500/30 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div id="playerBallPill" class="w-10 h-10 rounded-full bg-amber-400 text-slate-950 font-black text-sm flex items-center justify-center shadow">
+                            --
+                        </div>
+                        <div>
+                            <div class="text-[10px] uppercase font-extrabold text-indigo-300">Última Balota Cantada</div>
+                            <div id="playerLastBallText" class="text-xs font-bold text-slate-200">Esperando al cantador...</div>
+                        </div>
+                    </div>
+                    <span id="matchNotification" class="hidden text-xs bg-emerald-500 text-slate-950 font-black px-3 py-1 rounded-full animate-bounce">
+                        ¡LA TIENES!
+                    </span>
+                </div>
+
+                <!-- Card Header Controls -->
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 pb-4 border-b border-white/10">
+                    <div>
+                        <h2 class="text-2xl font-black text-white tracking-wide flex items-center gap-2">
+                            <i class="fa-solid fa-id-card text-amber-400"></i> Tu Cartón
+                        </h2>
+                        <p class="text-xs text-slate-300">¡Haz clic sobre tus números para colocar o quitar fichas!</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button id="btnNewCard" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold transition flex items-center space-x-1.5 border border-white/10 shadow">
+                            <i class="fa-solid fa-shuffle text-indigo-400"></i>
+                            <span>Nuevo Cartón</span>
+                        </button>
+                        <button id="btnClaimBingo" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-slate-950 font-black text-sm tracking-wider shadow-lg shadow-emerald-500/20 transform active:scale-95 transition flex items-center space-x-2">
+                            <i class="fa-solid fa-trophy"></i>
+                            <span>¡CANTAR BINGO!</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Game Pattern Objective Selector -->
+                <div class="mb-5 flex items-center justify-between bg-slate-900/80 p-3.5 rounded-2xl border border-white/10">
+                    <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-bullseye text-amber-400"></i> Patrón Objetivo:
+                    </span>
+                    <select id="patternSelect" class="bg-slate-950 border border-white/20 text-amber-300 text-xs font-bold rounded-xl px-3 py-1.5 focus:outline-none focus:border-amber-400">
+                        <option value="any_line">Cualquier Línea (Horiz, Vert, Diag)</option>
+                        <option value="horizontal">Línea Horizontal</option>
+                        <option value="vertical">Línea Vertical</option>
+                        <option value="diagonal">Diagonales (X)</option>
+                        <option value="corners">Cuatro Esquinas</option>
+                        <option value="full_house">Cartón Lleno (Full House)</option>
+                    </select>
+                </div>
+
+                <!-- 5x5 Bingo Card Container -->
+                <div class="bg-gradient-to-b from-amber-600 via-amber-700 to-amber-900 p-3 md:p-5 rounded-3xl shadow-2xl border-4 border-amber-400/60 max-w-md mx-auto">
+                    <!-- Letter Columns Header -->
+                    <div class="grid grid-cols-5 gap-2 mb-2 text-center font-black text-2xl md:text-3xl text-amber-200 tracking-wider">
+                        <div class="bg-slate-950/40 rounded-xl py-1 shadow">B</div>
+                        <div class="bg-slate-950/40 rounded-xl py-1 shadow">I</div>
+                        <div class="bg-slate-950/40 rounded-xl py-1 shadow">N</div>
+                        <div class="bg-slate-950/40 rounded-xl py-1 shadow">G</div>
+                        <div class="bg-slate-950/40 rounded-xl py-1 shadow">O</div>
+                    </div>
+
+                    <!-- 5x5 Grid Cells -->
+                    <div id="bingoCardGrid" class="grid grid-cols-5 gap-2 text-center">
+                        <!-- Javascript populates 25 cells -->
+                    </div>
+                </div>
+
+                <!-- Card Stats Footer -->
+                <div class="mt-6 flex justify-around text-center text-xs border-t border-white/10 pt-4 text-slate-300">
+                    <div>
+                        <span class="block text-slate-400 font-semibold mb-0.5">Fichas Marcadas</span>
+                        <span id="markedCount" class="text-base font-extrabold text-amber-400">1 / 25</span>
+                    </div>
+                    <div>
+                        <span class="block text-slate-400 font-semibold mb-0.5">Código Cartón</span>
+                        <span id="cardCodeDisplay" class="text-base font-mono font-extrabold text-indigo-300">#----</span>
+                    </div>
+                    <div>
+                        <span class="block text-slate-400 font-semibold mb-0.5">Estado</span>
+                        <span id="statusText" class="text-base font-extrabold text-emerald-400">En Juego</span>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+    </main>
+
+    <div id="firebaseModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-panel max-w-lg w-full rounded-3xl p-6 md:p-8 border border-white/20 shadow-2xl relative animate-pop max-h-[90vh] overflow-y-auto">
+            <button id="btnCloseFbModal" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl">
+                    <i class="fa-solid fa-fire"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white">Configuración de Firebase</h3>
+                    <p class="text-xs text-slate-300">Pega tus credenciales para habilitar tiempo real</p>
+                </div>
+            </div>
+
+            <p class="text-xs text-slate-300 mb-4 leading-relaxed">
+                Puedes pegar el objeto JSON completo de credenciales o completar los campos individualmente. Se guardarán en tu navegador (`localStorage`).
+            </p>
+
+            <!-- Quick JSON Input -->
+            <div class="mb-4">
+                <label class="text-xs font-bold text-amber-300 block mb-1">Pegar Objeto firebaseConfig (Opcional):</label>
+                <textarea id="fbJsonInput" rows="3" placeholder='{ "apiKey": "AIzaSy...", "databaseURL": "https://..." }' class="w-full bg-slate-950 border border-white/20 rounded-xl p-2.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-amber-400"></textarea>
+                <button id="btnParseJson" class="mt-1.5 text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded-lg text-amber-300 font-semibold transition border border-white/10">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Auto-completar Campos
+                </button>
+            </div>
+
+            <!-- Form Fields -->
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-300 font-semibold mb-0.5">apiKey</label>
+                    <input type="text" id="cfg_apiKey" class="w-full bg-slate-950 border border-white/15 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-400">
+                </div>
+                <div>
+                    <label class="block text-slate-300 font-semibold mb-0.5">authDomain</label>
+                    <input type="text" id="cfg_authDomain" class="w-full bg-slate-950 border border-white/15 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-400">
+                </div>
+                <div>
+                    <label class="block text-slate-300 font-semibold mb-0.5">databaseURL (Requerido para Realtime DB)</label>
+                    <input type="text" id="cfg_databaseURL" placeholder="https://tu-app-rtdb.firebaseio.com" class="w-full bg-slate-950 border border-white/15 rounded-xl px-3 py-2 text-amber-300 font-mono focus:outline-none focus:border-amber-400">
+                </div>
+                <div>
+                    <label class="block text-slate-300 font-semibold mb-0.5">projectId</label>
+                    <input type="text" id="cfg_projectId" class="w-full bg-slate-950 border border-white/15 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-400">
+                </div>
+                <div>
+                    <label class="block text-slate-300 font-semibold mb-0.5">appId</label>
+                    <input type="text" id="cfg_appId" class="w-full bg-slate-950 border border-white/15 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-400">
+                </div>
+            </div>
+
+            <div class="mt-6 flex space-x-3">
+                <button id="btnClearFbConfig" class="px-4 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 font-bold rounded-xl transition text-xs border border-red-500/30">
+                    Borrar
+                </button>
+                <button id="btnSaveFbConfig" class="flex-1 py-2.5 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black rounded-xl transition shadow-lg text-xs">
+                    Guardar y Conectar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="winModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-panel-gold max-w-md w-full rounded-3xl p-8 text-center border-2 border-amber-400/60 shadow-2xl animate-pop relative">
+            <div class="w-20 h-20 bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 shadow-xl shadow-amber-500/30">
+                <i class="fa-solid fa-crown"></i>
+            </div>
+            <h2 id="winModalTitle" class="heading-font text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 mb-2">
+                ¡BINGO BINGO!
+            </h2>
+            <p id="winModalMessage" class="text-slate-200 text-sm mb-6 leading-relaxed">
+                ¡Felicidades! Has completado el patrón requerido con éxito.
+            </p>
+            <button id="btnCloseWinModal" class="w-full py-3.5 bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 font-black rounded-xl shadow-lg transition">
+                ¡EXCELENTE!
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) this.ctx = new AudioContext();
+                }
+            }
+
+            playClick() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(450, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(850, this.ctx.currentTime + 0.05);
+
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.05);
+            }
+
+            playChip() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(160, this.ctx.currentTime + 0.08);
+
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+
+            playMatch() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(659.25, this.ctx.currentTime + 0.08);
+
+                gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.2);
+            }
+
+            playBingoFanfare() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.09);
+
+                    gain.gain.setValueAtTime(0.3, this.ctx.currentTime + idx * 0.09);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.09 + 0.35);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + idx * 0.09);
+                    osc.stop(this.ctx.currentTime + idx * 0.09 + 0.35);
+                });
+            }
+        }
+
+        class VoiceCaller {
+            constructor() {
+                this.synth = window.speechSynthesis || null;
+                this.enabled = true;
+                this.voice = null;
+                this.initVoice();
+            }
+
+            initVoice() {
+                if (!this.synth) return;
+                const setSpanishVoice = () => {
+                    const voices = this.synth.getVoices();
+                    this.voice = voices.find(v => v.lang.startsWith('es')) || voices[0];
+                };
+                setSpanishVoice();
+                if (this.synth.onvoiceschanged !== undefined) {
+                    this.synth.onvoiceschanged = setSpanishVoice;
+                }
+            }
+
+            speak(letter, number) {
+                if (!this.enabled || !this.synth) return;
+                this.synth.cancel();
+                
+                const text = `¡${letter}, ${number}!`;
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'es-ES';
+                if (this.voice) utterance.voice = this.voice;
+                utterance.rate = 0.95;
+                utterance.pitch = 1.05;
+
+                this.synth.speak(utterance);
+            }
+
+            speakBingo(playerName = "") {
+                if (!this.enabled || !this.synth) return;
+                this.synth.cancel();
+                const msg = playerName ? `¡Atención! ¡${playerName} ha cantado Bingo!` : "¡Atención! ¡Han cantado Bingo!";
+                const utterance = new SpeechSynthesisUtterance(msg);
+                utterance.lang = 'es-ES';
+                if (this.voice) utterance.voice = this.voice;
+                this.synth.speak(utterance);
+            }
+        }
+
+        class BingoApp {
+            constructor() {
+                this.sound = new SoundEngine();
+                this.voice = new VoiceCaller();
+
+                this.db = null;
+                this.role = null; // 'host' or 'player'
+                this.roomCode = null;
+                this.playerName = 'Jugador';
+                this.cardCode = this.generateCode(5);
+
+                this.allNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
+                this.drawnNumbers = [];
+                this.playerCard = [];
+                this.markedMatrix = Array.from({ length: 5 }, () => Array(5).fill(false));
+                
+                this.autoInterval = null;
+                this.autoSpeed = 3000;
+
+                this.initFirebase();
+                this.initMasterBoard();
+                this.setupEventListeners();
+            }
+
+            getLetter(num) {
+                if (num <= 15) return 'B';
+                if (num <= 30) return 'I';
+                if (num <= 45) return 'N';
+                if (num <= 60) return 'G';
+                return 'O';
+            }
+
+            generateCode(len = 4) {
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                let code = '';
+                for (let i = 0; i < len; i++) {
+                    code += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return code;
+            }
+
+            // Firebase Storage and Initialization
+            initFirebase() {
+                const storedConfig = localStorage.getItem('bingo_firebase_config');
+                const statusDot = document.getElementById('fbStatusDot');
+                const statusText = document.getElementById('fbStatusText');
+
+                if (storedConfig) {
+                    try {
+                        const config = JSON.parse(storedConfig);
+                        if (config.databaseURL) {
+                            const app = initializeApp(config);
+                            this.db = getDatabase(app);
+                            statusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block';
+                            statusText.textContent = 'Firebase On';
+                            return;
+                        }
+                    } catch (e) {
+                        console.error("Error al inicializar Firebase:", e);
+                    }
+                }
+
+                statusDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 inline-block';
+                statusText.textContent = 'Modo Local';
+            }
+
+            saveFirebaseConfig(config) {
+                localStorage.setItem('bingo_firebase_config', JSON.stringify(config));
+                location.reload();
+            }
+
+            initMasterBoard() {
+                const masterBoardEl = document.getElementById('masterBoard');
+                masterBoardEl.innerHTML = '';
+
+                for (let i = 1; i <= 75; i++) {
+                    const cell = document.createElement('div');
+                    cell.id = `master-cell-${i}`;
+                    cell.className = 'py-1 rounded-lg bg-slate-900/80 border border-white/10 text-slate-400 font-mono flex items-center justify-center transition-all duration-300';
+                    cell.textContent = i;
+                    masterBoardEl.appendChild(cell);
+                }
+            }
+
+            startHostSession() {
+                this.role = 'host';
+                this.roomCode = 'BINGO-' + this.generateCode(4);
+                
+                document.getElementById('roleSelectorScreen').classList.add('hidden');
+                document.getElementById('mainGameView').classList.remove('hidden');
+                document.getElementById('hostSection').classList.remove('hidden');
+                document.getElementById('playerSection').classList.add('hidden');
+                document.getElementById('roomBadge').classList.remove('hidden');
+                document.getElementById('roomCodeDisplay').textContent = this.roomCode;
+
+                if (this.db) {
+                    // Create Room in Realtime Database
+                    set(ref(this.db, `rooms/${this.roomCode}`), {
+                        createdAt: Date.now(),
+                        drawnNumbers: [],
+                        lastBall: null
+                    });
+
+                    // Listen for Connected Players
+                    onValue(ref(this.db, `rooms/${this.roomCode}/players`), (snapshot) => {
+                        const players = snapshot.val() || {};
+                        this.renderConnectedPlayers(players);
+                    });
+
+                    // Listen for Bingo Claims
+                    onValue(ref(this.db, `rooms/${this.roomCode}/claims`), (snapshot) => {
+                        const claims = snapshot.val() || {};
+                        this.renderClaimsList(claims);
+                    });
+                }
+            }
+
+            startPlayerSession(code, name) {
+                this.role = 'player';
+                this.roomCode = code.toUpperCase();
+                this.playerName = name || 'Jugador ' + this.generateCode(3);
+
+                document.getElementById('roleSelectorScreen').classList.add('hidden');
+                document.getElementById('mainGameView').classList.remove('hidden');
+                document.getElementById('hostSection').classList.add('hidden');
+                document.getElementById('playerSection').classList.remove('hidden');
+                document.getElementById('roomBadge').classList.remove('hidden');
+                document.getElementById('roomCodeDisplay').textContent = this.roomCode;
+                document.getElementById('cardCodeDisplay').textContent = `#${this.cardCode}`;
+
+                this.generatePlayerCard();
+
+                if (this.db) {
+                    // Register player in room
+                    const playerRef = ref(this.db, `rooms/${this.roomCode}/players/${this.cardCode}`);
+                    set(playerRef, {
+                        name: this.playerName,
+                        joinedAt: Date.now()
+                    });
+
+                    // Listen for Drawn Numbers from Host
+                    onValue(ref(this.db, `rooms/${this.roomCode}/drawnNumbers`), (snapshot) => {
+                        const numbers = snapshot.val() || [];
+                        const previousCount = this.drawnNumbers.length;
+                        this.drawnNumbers = numbers;
+
+                        if (numbers.length > previousCount) {
+                            const lastNum = numbers[numbers.length - 1];
+                            const letter = this.getLetter(lastNum);
+                            
+                            this.onNewBallDrawnPlayer(letter, lastNum);
+                        }
+                    });
+                }
+            }
+
+            renderConnectedPlayers(playersObj) {
+                const container = document.getElementById('connectedPlayersList');
+                const countBadge = document.getElementById('connectedCount');
+                container.innerHTML = '';
+
+                const keys = Object.keys(playersObj);
+                countBadge.textContent = `${keys.length} Online`;
+
+                if (keys.length === 0) {
+                    container.innerHTML = '<span class="text-xs text-slate-400 italic">Esperando que se unan jugadores...</span>';
+                    return;
+                }
+
+                keys.forEach(k => {
+                    const p = playersObj[k];
+                    const tag = document.createElement('span');
+                    tag.className = 'text-xs bg-slate-800 text-slate-200 px-2.5 py-1 rounded-xl border border-white/10 font-semibold flex items-center gap-1.5';
+                    tag.innerHTML = `<i class="fa-solid fa-user-ninja text-indigo-400"></i> ${p.name}`;
+                    container.appendChild(tag);
+                });
+            }
+
+            renderClaimsList(claimsObj) {
+                const container = document.getElementById('claimsList');
+                container.innerHTML = '';
+
+                const keys = Object.keys(claimsObj);
+                if (keys.length === 0) {
+                    container.innerHTML = '<p class="text-xs text-slate-400 italic">No hay reclamaciones de victoria pendientes.</p>';
+                    return;
+                }
+
+                keys.forEach(claimId => {
+                    const claim = claimsObj[claimId];
+                    this.voice.speakBingo(claim.playerName);
+
+                    const cardBox = document.createElement('div');
+                    cardBox.className = 'glass-panel-gold p-4 rounded-2xl border border-amber-400/50 space-y-3 animate-pop';
+                    
+                    let gridHtml = '<div class="grid grid-cols-5 gap-1 text-[10px] text-center font-bold my-2">';
+                    for (let r = 0; r < 5; r++) {
+                        for (let c = 0; c < 5; c++) {
+                            const val = claim.card[r][c];
+                            const isMarked = claim.marks[r][c];
+                            const isDrawn = val === 'LIBRE' || this.drawnNumbers.includes(val);
+                            
+                            let bg = 'bg-slate-900 text-slate-300';
+                            if (isMarked && isDrawn) bg = 'bg-emerald-500 text-slate-950';
+                            else if (isMarked && !isDrawn) bg = 'bg-red-500 text-white'; // Invalid mark!
+
+                            gridHtml += `<div class="${bg} p-1 rounded">${val === 'LIBRE' ? '★' : val}</div>`;
+                        }
+                    }
+                    gridHtml += '</div>';
+
+                    cardBox.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-extrabold text-amber-300"><i class="fa-solid fa-crown mr-1"></i> ${claim.playerName}</span>
+                            <span class="text-xs font-mono text-slate-300">Cartón: #${claim.cardCode}</span>
+                        </div>
+                        <p class="text-xs text-slate-200">Patrón: <strong>${claim.pattern}</strong></p>
+                        ${gridHtml}
+                        <div class="flex space-x-2">
+                            <button class="btn-confirm-win w-full py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold rounded-xl transition">
+                                Confirmar Victoria
+                            </button>
+                        </div>
+                    `;
+
+                    cardBox.querySelector('.btn-confirm-win').addEventListener('click', () => {
+                        this.sound.playBingoFanfare();
+                        if (typeof confetti === 'function') confetti({ particleCount: 200, spread: 100 });
+                        alert(`¡Victoria Confirmada para ${claim.playerName}!`);
+                    });
+
+                    container.appendChild(cardBox);
+                });
+            }
+
+            generatePlayerCard() {
+                this.playerCard = [];
+                this.markedMatrix = Array.from({ length: 5 }, () => Array(5).fill(false));
+
+                const getRandomColumn = (min, max) => {
+                    const nums = new Set();
+                    while (nums.size < 5) {
+                        nums.add(Math.floor(Math.random() * (max - min + 1)) + min);
+                    }
+                    return Array.from(nums);
+                };
+
+                const colB = getRandomColumn(1, 15);
+                const colI = getRandomColumn(16, 30);
+                const colN = getRandomColumn(31, 45);
+                const colG = getRandomColumn(46, 60);
+                const colO = getRandomColumn(61, 75);
+
+                for (let r = 0; r < 5; r++) {
+                    const row = [colB[r], colI[r], colN[r], colG[r], colO[r]];
+                    this.playerCard.push(row);
+                }
+
+                // Free space in the middle
+                this.playerCard[2][2] = 'LIBRE';
+                this.markedMatrix[2][2] = true;
+
+                this.renderPlayerCard();
+                this.updateMarkedCount();
+            }
+
+            renderPlayerCard() {
+                const gridEl = document.getElementById('bingoCardGrid');
+                gridEl.innerHTML = '';
+
+                for (let r = 0; r < 5; r++) {
+                    for (let c = 0; c < 5; c++) {
+                        const val = this.playerCard[r][c];
+                        const isMarked = this.markedMatrix[r][c];
+
+                        const cell = document.createElement('button');
+                        cell.dataset.row = r;
+                        cell.dataset.col = c;
+                        cell.className = `h-14 md:h-16 rounded-2xl font-black text-lg md:text-xl flex items-center justify-center relative transition transform active:scale-95 shadow-md ${
+                            val === 'LIBRE' 
+                                ? 'bg-amber-400 text-slate-950 font-bold text-xs md:text-sm' 
+                                : 'bg-slate-950/90 text-amber-100 hover:bg-slate-800 border border-amber-500/30'
+                        }`;
+
+                        if (val === 'LIBRE') {
+                            cell.innerHTML = '<span class="leading-none text-center">★<br>LIBRE</span>';
+                        } else {
+                            cell.textContent = val;
+                        }
+
+                        if (isMarked && val !== 'LIBRE') {
+                            const chip = document.createElement('div');
+                            chip.className = 'absolute inset-1 rounded-xl chip-marker flex items-center justify-center text-white font-black text-lg md:text-xl animate-pop';
+                            chip.textContent = val;
+                            cell.appendChild(chip);
+                        }
+
+                        cell.addEventListener('click', () => this.toggleMark(r, c));
+                        gridEl.appendChild(cell);
+                    }
+                }
+            }
+
+            toggleMark(r, c) {
+                if (this.playerCard[r][c] === 'LIBRE') return;
+                
+                this.sound.playChip();
+                this.markedMatrix[r][c] = !this.markedMatrix[r][c];
+                this.renderPlayerCard();
+                this.updateMarkedCount();
+            }
+
+            updateMarkedCount() {
+                let count = 0;
+                for (let r = 0; r < 5; r++) {
+                    for (let c = 0; c < 5; c++) {
+                        if (this.markedMatrix[r][c]) count++;
+                    }
+                }
+                document.getElementById('markedCount').textContent = `${count} / 25`;
+            }
+
+            drawBall() {
+                if (this.drawnNumbers.length >= 75) {
+                    alert("¡Se han extraído todas las 75 balotas!");
+                    this.stopAutoPlay();
+                    return;
+                }
+
+                const available = this.allNumbers.filter(n => !this.drawnNumbers.includes(n));
+                const drawn = available[Math.floor(Math.random() * available.length)];
+                
+                this.drawnNumbers.push(drawn);
+                const letter = this.getLetter(drawn);
+
+                this.sound.playClick();
+                this.voice.speak(letter, drawn);
+
+                // Ball Graphic Animation
+                const ballDisplay = document.getElementById('ballDisplay');
+                const ballLetter = document.getElementById('ballLetter');
+                const ballNumber = document.getElementById('ballNumber');
+
+                ballDisplay.classList.remove('ball-spin');
+                void ballDisplay.offsetWidth;
+                ballDisplay.classList.add('ball-spin');
+
+                ballLetter.textContent = letter;
+                ballNumber.textContent = drawn;
+
+                // Update Master Board Cell
+                const masterCell = document.getElementById(`master-cell-${drawn}`);
+                if (masterCell) {
+                    masterCell.className = 'py-1 rounded-lg bg-amber-400 text-slate-950 font-black shadow-lg shadow-amber-500/20 font-mono flex items-center justify-center transform scale-105 border border-amber-200';
+                }
+
+                document.getElementById('drawnCount').textContent = `${this.drawnNumbers.length} / 75`;
+                this.updateRecentBalls(letter, drawn);
+
+                // Firebase Realtime Sync
+                if (this.db && this.roomCode) {
+                    set(ref(this.db, `rooms/${this.roomCode}/drawnNumbers`), this.drawnNumbers);
+                    set(ref(this.db, `rooms/${this.roomCode}/lastBall`), { letter, number: drawn });
+                }
+            }
+
+            onNewBallDrawnPlayer(letter, num) {
+                this.sound.playClick();
+                this.voice.speak(letter, num);
+
+                const pill = document.getElementById('playerBallPill');
+                const text = document.getElementById('playerLastBallText');
+                const matchBadge = document.getElementById('matchNotification');
+
+                pill.textContent = `${letter}${num}`;
+                text.textContent = `¡Salió la balota ${letter}-${num}!`;
+
+                // Check if number exists on card
+                let hasNumber = false;
+                for (let r = 0; r < 5; r++) {
+                    for (let c = 0; c < 5; c++) {
+                        if (this.playerCard[r][c] === num) {
+                            hasNumber = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (hasNumber) {
+                    this.sound.playMatch();
+                    matchBadge.classList.remove('hidden');
+                    setTimeout(() => matchBadge.classList.add('hidden'), 3500);
+                }
+            }
+
+            updateRecentBalls(letter, num) {
+                const recentContainer = document.getElementById('recentBalls');
+                if (this.drawnNumbers.length === 1) recentContainer.innerHTML = '';
+
+                const ballPill = document.createElement('div');
+                ballPill.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-amber-400 text-slate-950 font-black text-xs flex flex-col items-center justify-center shadow-lg animate-pop border border-amber-100';
+                ballPill.innerHTML = `<span class="text-[9px] leading-none opacity-80">${letter}</span><span class="leading-none">${num}</span>`;
+
+                recentContainer.insertBefore(ballPill, recentContainer.firstChild);
+            }
+
+            checkBingo() {
+                const pattern = document.getElementById('patternSelect').value;
+                let isWin = false;
+                const m = this.markedMatrix;
+
+                const checkRow = (r) => m[r].every(val => val);
+                const checkCol = (c) => [0, 1, 2, 3, 4].every(r => m[r][c]);
+                const checkDiag1 = () => [0, 1, 2, 3, 4].every(i => m[i][i]);
+                const checkDiag2 = () => [0, 1, 2, 3, 4].every(i => m[i][4 - i]);
+                const checkCorners = () => m[0][0] && m[0][4] && m[4][0] && m[4][4];
+                const checkFullHouse = () => m.every(row => row.every(val => val));
+
+                switch (pattern) {
+                    case 'horizontal': isWin = [0, 1, 2, 3, 4].some(checkRow); break;
+                    case 'vertical': isWin = [0, 1, 2, 3, 4].some(checkCol); break;
+                    case 'diagonal': isWin = checkDiag1() || checkDiag2(); break;
+                    case 'corners': isWin = checkCorners(); break;
+                    case 'full_house': isWin = checkFullHouse(); break;
+                    case 'any_line':
+                    default:
+                        isWin = [0, 1, 2, 3, 4].some(checkRow) || [0, 1, 2, 3, 4].some(checkCol) || checkDiag1() || checkDiag2() || checkCorners() || checkFullHouse();
+                        break;
+                }
+
+                if (isWin) {
+                    this.onWin(pattern);
+                } else {
+                    this.sound.playClick();
+                    alert("¡Aún no completas el patrón de victoria seleccionado en tu cartón!");
+                }
+            }
+
+            onWin(pattern) {
+                this.sound.playBingoFanfare();
+                this.voice.speakBingo(this.playerName);
+
+                document.getElementById('statusText').textContent = '¡BINGO VICTORIA!';
+                document.getElementById('statusText').className = 'text-base font-extrabold text-amber-300 animate-pulse';
+
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
+                }
+
+                // Send Claim to Firebase Host
+                if (this.db && this.roomCode) {
+                    const claimsRef = ref(this.db, `rooms/${this.roomCode}/claims`);
+                    push(claimsRef, {
+                        playerName: this.playerName,
+                        cardCode: this.cardCode,
+                        card: this.playerCard,
+                        marks: this.markedMatrix,
+                        pattern: pattern,
+                        timestamp: Date.now()
+                    });
+                }
+
+                document.getElementById('winModal').classList.remove('hidden');
+            }
+
+            toggleAutoPlay(enabled) {
+                if (enabled) {
+                    if (this.drawnNumbers.length >= 75) return;
+                    this.drawBall();
+                    this.autoInterval = setInterval(() => this.drawBall(), this.autoSpeed);
+                } else {
+                    this.stopAutoPlay();
+                }
+            }
+
+            stopAutoPlay() {
+                if (this.autoInterval) {
+                    clearInterval(this.autoInterval);
+                    this.autoInterval = null;
+                }
+                const autoToggle = document.getElementById('autoPlayToggle');
+                if (autoToggle) autoToggle.checked = false;
+            }
+
+            setupEventListeners() {
+                // Firebase Modal Events
+                document.getElementById('btnOpenFirebaseModal').addEventListener('click', () => {
+                    const stored = localStorage.getItem('bingo_firebase_config');
+                    if (stored) {
+                        try {
+                            const cfg = JSON.parse(stored);
+                            document.getElementById('cfg_apiKey').value = cfg.apiKey || '';
+                            document.getElementById('cfg_authDomain').value = cfg.authDomain || '';
+                            document.getElementById('cfg_databaseURL').value = cfg.databaseURL || '';
+                            document.getElementById('cfg_projectId').value = cfg.projectId || '';
+                            document.getElementById('cfg_appId').value = cfg.appId || '';
+                        } catch(e){}
+                    }
+                    document.getElementById('firebaseModal').classList.remove('hidden');
+                });
+
+                document.getElementById('btnCloseFbModal').addEventListener('click', () => {
+                    document.getElementById('firebaseModal').classList.add('hidden');
+                });
+
+                document.getElementById('btnParseJson').addEventListener('click', () => {
+                    try {
+                        const json = JSON.parse(document.getElementById('fbJsonInput').value);
+                        if (json.apiKey) document.getElementById('cfg_apiKey').value = json.apiKey;
+                        if (json.authDomain) document.getElementById('cfg_authDomain').value = json.authDomain;
+                        if (json.databaseURL) document.getElementById('cfg_databaseURL').value = json.databaseURL;
+                        if (json.projectId) document.getElementById('cfg_projectId').value = json.projectId;
+                        if (json.appId) document.getElementById('cfg_appId').value = json.appId;
+                    } catch(e) {
+                        alert("El JSON ingresado no es válido.");
+                    }
+                });
+
+                document.getElementById('btnSaveFbConfig').addEventListener('click', () => {
+                    const config = {
+                        apiKey: document.getElementById('cfg_apiKey').value.trim(),
+                        authDomain: document.getElementById('cfg_authDomain').value.trim(),
+                        databaseURL: document.getElementById('cfg_databaseURL').value.trim(),
+                        projectId: document.getElementById('cfg_projectId').value.trim(),
+                        appId: document.getElementById('cfg_appId').value.trim()
+                    };
+                    this.saveFirebaseConfig(config);
+                });
+
+                document.getElementById('btnClearFbConfig').addEventListener('click', () => {
+                    localStorage.removeItem('bingo_firebase_config');
+                    location.reload();
+                });
+
+                // Navigation Events
+                document.getElementById('btnSelectHost').addEventListener('click', () => {
+                    this.sound.playClick();
+                    this.startHostSession();
+                });
+
+                document.getElementById('btnSelectPlayer').addEventListener('click', () => {
+                    const code = document.getElementById('roomCodeInput').value.trim();
+                    const name = document.getElementById('playerNameInput').value.trim();
+                    if (!code) {
+                        alert("Por favor ingresa un código de sala válido.");
+                        return;
+                    }
+                    this.sound.playClick();
+                    this.startPlayerSession(code, name);
+                });
+
+                document.getElementById('btnChangeRole').addEventListener('click', () => {
+                    location.reload();
+                });
+
+                document.getElementById('brandLogo').addEventListener('click', () => {
+                    location.reload();
+                });
+
+                // Host Controls
+                document.getElementById('btnDrawBall').addEventListener('click', () => {
+                    this.stopAutoPlay();
+                    this.drawBall();
+                });
+
+                document.getElementById('autoPlayToggle').addEventListener('change', (e) => {
+                    this.sound.playClick();
+                    this.toggleAutoPlay(e.target.checked);
+                });
+
+                const speedRange = document.getElementById('speedRange');
+                const speedLabel = document.getElementById('speedLabel');
+                speedRange.addEventListener('input', (e) => {
+                    const val = parseFloat(e.target.value);
+                    this.autoSpeed = val * 1000;
+                    speedLabel.textContent = `${val.toFixed(1)}s`;
+
+                    if (this.autoInterval) {
+                        this.stopAutoPlay();
+                        document.getElementById('autoPlayToggle').checked = true;
+                        this.toggleAutoPlay(true);
+                    }
+                });
+
+                // Player Controls
+                document.getElementById('btnClaimBingo').addEventListener('click', () => {
+                    this.checkBingo();
+                });
+
+                document.getElementById('btnNewCard').addEventListener('click', () => {
+                    this.sound.playClick();
+                    this.cardCode = this.generateCode(5);
+                    document.getElementById('cardCodeDisplay').textContent = `#${this.cardCode}`;
+                    this.generatePlayerCard();
+                });
+
+                // Global Sound Toggles
+                document.getElementById('btnSoundToggle').addEventListener('click', () => {
+                    this.sound.enabled = !this.sound.enabled;
+                    const icon = document.getElementById('iconSound');
+                    const txt = document.getElementById('txtSound');
+                    if (this.sound.enabled) {
+                        icon.className = 'fa-solid fa-volume-high text-amber-400';
+                        txt.textContent = 'Sonido';
+                    } else {
+                        icon.className = 'fa-solid fa-volume-xmark text-slate-500';
+                        txt.textContent = 'Mute';
+                    }
+                });
+
+                document.getElementById('btnVoiceToggle').addEventListener('click', () => {
+                    this.voice.enabled = !this.voice.enabled;
+                    const icon = document.getElementById('iconVoice');
+                    const txt = document.getElementById('txtVoice');
+                    if (this.voice.enabled) {
+                        icon.className = 'fa-solid fa-comment-dots text-emerald-400';
+                        txt.textContent = 'Voz';
+                    } else {
+                        icon.className = 'fa-solid fa-comment-slash text-slate-500';
+                        txt.textContent = 'Mute';
+                    }
+                });
+
+                document.getElementById('btnCloseWinModal').addEventListener('click', () => {
+                    document.getElementById('winModal').classList.add('hidden');
+                });
+            }
+        }
+
+        // Initialize App on Load
+        window.onload = () => {
+            window.bingoApp = new BingoApp();
+        };
+    </script>
+</body>
+</html>
