@@ -110,6 +110,12 @@
       font-size: 0.85rem;
     }
 
+    .btn-xs {
+      padding: 0.15rem 0.4rem;
+      font-size: 0.75rem;
+      border-radius: 0.3rem;
+    }
+
     .btn-primary { 
       background: var(--accent-gradient); 
       color: #fff; 
@@ -272,6 +278,7 @@
       padding: 12px;
       border-radius: 0.75rem;
       border: 1px solid var(--border-color);
+      position: relative;
     }
 
     .card-title {
@@ -280,6 +287,9 @@
       color: var(--text-muted);
       margin-bottom: 0.5rem;
       text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .bingo-card {
@@ -404,9 +414,32 @@
       font-size: 0.95rem;
     }
 
-    .player-info-cards {
-      font-size: 0.8rem;
-      color: var(--text-muted);
+    .assigned-tags-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-top: 0.3rem;
+    }
+
+    .card-tag {
+      background: var(--border-color);
+      color: var(--text-main);
+      border-radius: 0.25rem;
+      padding: 0.1rem 0.4rem;
+      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .card-tag i {
+      cursor: pointer;
+      color: var(--danger);
+    }
+
+    .card-tag i:hover {
+      opacity: 0.8;
     }
 
     .player-controls {
@@ -813,6 +846,7 @@
     let playerName = "Jugador";
     let drawnBalls = [];
     let roomCardsPool = [];
+    let currentRoomPlayers = {};
 
     // SINTETIZADOR DE SONIDO
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -886,7 +920,6 @@
         return;
       }
 
-      // Si no hay código ingresado, genera un número aleatorio de 4 dígitos (1000 - 9999)
       const finalRoomCode = rawCode !== '' ? rawCode : Math.floor(1000 + Math.random() * 9000).toString();
 
       closeModal('modal-admin-auth');
@@ -981,6 +1014,20 @@
       return { id: id, cells: cells };
     }
 
+    // OBTENER MAPA DE TABLAS ASIGNADAS (retorna objeto { cardId: playerName })
+    function getAllAssignedCardMap() {
+      const assignedMap = {};
+      Object.keys(currentRoomPlayers).forEach(pId => {
+        const p = currentRoomPlayers[pId];
+        if (p.assignedCardIds && Array.isArray(p.assignedCardIds)) {
+          p.assignedCardIds.forEach(cId => {
+            assignedMap[cId] = p.name;
+          });
+        }
+      });
+      return assignedMap;
+    }
+
     // FLUJO ADMIN / HOST (CON PERSISTENCIA DE SALA)
     async function initHostFlow(roomCode) {
       isHost = true;
@@ -1009,17 +1056,18 @@
       updateHistory('admin-history', drawnBalls);
       showScreen('screen-admin');
 
-      // Escuchar cambios en el pozo de tablas de esta sala
+      // Escuchar cambios en el pozo de tablas
       onValue(ref(db, `rooms/${currentRoomCode}/cardsPool`), (snap) => {
         roomCardsPool = snap.val() || [];
         document.getElementById('cards-pool-count').innerText = roomCardsPool.length;
+        renderAdminPlayerList(currentRoomPlayers);
       });
 
       // Escuchar jugadores
       const playersRef = ref(db, `rooms/${currentRoomCode}/players`);
       onValue(playersRef, (snap) => {
-        const players = snap.val() || {};
-        renderAdminPlayerList(players);
+        currentRoomPlayers = snap.val() || {};
+        renderAdminPlayerList(currentRoomPlayers);
       });
 
       listenForGlobalBingoClaims(currentRoomCode);
@@ -1044,47 +1092,91 @@
       alert(`¡Se han generado ${count} nueva(s) tabla(s) para la sala ${currentRoomCode}!`);
     });
 
-    // VER POZO COMPLETO DE TABLAS EN MODAL
+    // VER POZO COMPLETO DE TABLAS EN MODAL CON OPCIÓN DE ELIMINAR Y MARCA "(ASIGNADA)"
     document.getElementById('btn-view-cards').addEventListener('click', () => {
+      renderCardsPoolModal();
+      openModal('modal-view-cards');
+    });
+
+    function renderCardsPoolModal() {
       const container = document.getElementById('cards-pool-container');
       container.innerHTML = '';
 
       if (!roomCardsPool.length) {
         container.innerHTML = `<div style="text-align: center; color: var(--text-muted); width: 100%;">No hay tablas generadas en esta sala aún.</div>`;
-      } else {
-        roomCardsPool.forEach(cData => {
-          const cardBox = document.createElement('div');
-          cardBox.className = 'single-card-container';
-
-          const title = document.createElement('div');
-          title.className = 'card-title';
-          title.innerText = `Tabla #${cData.id}`;
-          cardBox.appendChild(title);
-
-          const cardEl = document.createElement('div');
-          cardEl.className = 'bingo-card';
-
-          ['B', 'I', 'N', 'G', 'O'].forEach(l => {
-            const h = document.createElement('div');
-            h.className = 'card-header';
-            h.innerText = l;
-            cardEl.appendChild(h);
-          });
-
-          cData.cells.forEach(cellObj => {
-            const cell = document.createElement('div');
-            cell.className = 'card-cell' + (cellObj.isFree ? ' free-space' : '');
-            cell.innerText = cellObj.val;
-            cardEl.appendChild(cell);
-          });
-
-          cardBox.appendChild(cardEl);
-          container.appendChild(cardBox);
-        });
+        return;
       }
 
-      openModal('modal-view-cards');
-    });
+      const assignedMap = getAllAssignedCardMap();
+
+      roomCardsPool.forEach(cData => {
+        const isAssigned = !!assignedMap[cData.id];
+        const assignedUser = assignedMap[cData.id];
+
+        const cardBox = document.createElement('div');
+        cardBox.className = 'single-card-container';
+
+        const title = document.createElement('div');
+        title.className = 'card-title';
+        
+        const titleSpan = document.createElement('span');
+        titleSpan.innerHTML = `Tabla #${cData.id} ${isAssigned ? `<small style="color:var(--accent-pink); font-weight:800;">(ASIGNADA: ${assignedUser})</small>` : ''}`;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'btn btn-xs btn-danger';
+        deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Eliminar';
+        deleteBtn.addEventListener('click', () => deleteCardFromPool(cData.id));
+
+        title.appendChild(titleSpan);
+        title.appendChild(deleteBtn);
+        cardBox.appendChild(title);
+
+        const cardEl = document.createElement('div');
+        cardEl.className = 'bingo-card';
+
+        ['B', 'I', 'N', 'G', 'O'].forEach(l => {
+          const h = document.createElement('div');
+          h.className = 'card-header';
+          h.innerText = l;
+          cardEl.appendChild(h);
+        });
+
+        cData.cells.forEach(cellObj => {
+          const cell = document.createElement('div');
+          cell.className = 'card-cell' + (cellObj.isFree ? ' free-space' : '');
+          cell.innerText = cellObj.val;
+          cardEl.appendChild(cell);
+        });
+
+        cardBox.appendChild(cardEl);
+        container.appendChild(cardBox);
+      });
+    }
+
+    // ELIMINAR TABLA DEL POZO Y DESASIGNARLA DE CUALQUIER JUGADOR
+    function deleteCardFromPool(cardId) {
+      if (!confirm(`¿Deseas eliminar la Tabla #${cardId} permanentemente?`)) return;
+
+      const newPool = roomCardsPool.filter(c => c.id !== cardId);
+
+      // Desasignar de cualquier jugador que la tenga
+      Object.keys(currentRoomPlayers).forEach(pId => {
+        const p = currentRoomPlayers[pId];
+        if (p.assignedCardIds && p.assignedCardIds.includes(cardId)) {
+          const updatedAssigned = p.assignedCardIds.filter(id => id !== cardId);
+          update(ref(db, `rooms/${currentRoomCode}/players/${pId}`), {
+            assignedCardIds: updatedAssigned
+          });
+        }
+      });
+
+      update(ref(db, `rooms/${currentRoomCode}`), {
+        cardsPool: newPool
+      }).then(() => {
+        renderCardsPoolModal();
+      });
+    }
 
     function renderAdminPlayerList(players) {
       const activeListEl = document.getElementById('admin-player-list');
@@ -1144,6 +1236,8 @@
         return;
       }
 
+      const assignedMap = getAllAssignedCardMap();
+
       activeListEl.innerHTML = '';
       activeKeys.forEach(id => {
         const p = players[id];
@@ -1159,14 +1253,35 @@
         const nameDiv = document.createElement('div');
         nameDiv.className = 'player-info-name';
         nameDiv.innerText = p.name;
-        
-        const cardsDiv = document.createElement('div');
-        cardsDiv.className = 'player-info-cards';
-        cardsDiv.innerText = `Tablas asignadas: ${assignedIds.length ? assignedIds.map(num => '#' + num).join(', ') : 'Ninguna'}`;
 
         infoDiv.appendChild(nameDiv);
-        infoDiv.appendChild(cardsDiv);
         header.appendChild(infoDiv);
+
+        // Renderizar etiquetas de tablas asignadas con opción de desasignar
+        const tagsList = document.createElement('div');
+        tagsList.className = 'assigned-tags-list';
+
+        if (assignedIds.length === 0) {
+          const noCards = document.createElement('span');
+          noCards.style.fontSize = '0.8rem';
+          noCards.style.color = 'var(--text-muted)';
+          noCards.innerText = 'Sin tablas asignadas';
+          tagsList.appendChild(noCards);
+        } else {
+          assignedIds.forEach(cId => {
+            const tag = document.createElement('span');
+            tag.className = 'card-tag';
+            tag.innerHTML = `Tabla #${cId} `;
+            
+            const removeIcon = document.createElement('i');
+            removeIcon.className = 'fa-solid fa-xmark';
+            removeIcon.title = 'Quitar tabla a jugador';
+            removeIcon.addEventListener('click', () => unassignCardFromPlayer(id, cId));
+
+            tag.appendChild(removeIcon);
+            tagsList.appendChild(tag);
+          });
+        }
 
         const assignBox = document.createElement('div');
         assignBox.className = 'card-assign-box';
@@ -1181,12 +1296,18 @@
         select.appendChild(defaultOpt);
 
         roomCardsPool.forEach(c => {
-          if (!assignedIds.includes(c.id)) {
-            let opt = document.createElement('option');
-            opt.value = c.id;
+          let opt = document.createElement('option');
+          opt.value = c.id;
+          const isAssigned = !!assignedMap[c.id];
+          
+          if (isAssigned) {
+            opt.innerText = `Tabla #${c.id} (ASIGNADA: ${assignedMap[c.id]})`;
+            opt.disabled = true;
+          } else {
             opt.innerText = `Tabla #${c.id}`;
-            select.appendChild(opt);
           }
+          
+          select.appendChild(opt);
         });
 
         const btnAssign = document.createElement('button');
@@ -1199,6 +1320,7 @@
         assignBox.appendChild(btnAssign);
 
         item.appendChild(header);
+        item.appendChild(tagsList);
         item.appendChild(assignBox);
 
         activeListEl.appendChild(item);
@@ -1225,6 +1347,19 @@
               assignedCardIds: currentAssigned
             });
           }
+        }
+      });
+    }
+
+    function unassignCardFromPlayer(pId, cardId) {
+      const playerRef = ref(db, `rooms/${currentRoomCode}/players/${pId}`);
+      get(playerRef).then((snapshot) => {
+        const pData = snapshot.val();
+        if (pData && pData.assignedCardIds) {
+          const updatedAssigned = pData.assignedCardIds.filter(id => id !== cardId);
+          update(ref(db, `rooms/${currentRoomCode}/players/${pId}`), {
+            assignedCardIds: updatedAssigned
+          });
         }
       });
     }
