@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Super Bingo Las Estrellas</title>
+  <title>Bingo & Lotería Multijugador Realtime</title>
   
   <!-- FontAwesome & Google Fonts -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -353,6 +353,54 @@
       border: 1px solid rgba(16, 185, 129, 0.3);
     }
 
+    /* ESTILOS PARA EL CREADOR DE PATRONES */
+    .pattern-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      width: 160px;
+      height: 160px;
+      margin: 0 auto;
+    }
+
+    .pattern-cell {
+      aspect-ratio: 1;
+      background: var(--border-color);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .pattern-cell.active {
+      background: var(--accent-gradient);
+      box-shadow: 0 0 8px rgba(236, 72, 153, 0.8);
+      border-color: var(--accent-pink);
+    }
+
+    .pattern-mini-display {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 3px;
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 0.5rem auto;
+      background: rgba(13, 7, 20, 0.6);
+      padding: 6px;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .pattern-mini-cell {
+      border-radius: 2px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .pattern-mini-cell.active {
+      background: var(--accent-pink);
+      box-shadow: 0 0 5px var(--accent-pink);
+    }
+
     @keyframes pop {
       0% { transform: scale(0); }
       100% { transform: scale(1); }
@@ -389,7 +437,7 @@
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
-      max-height: 200px;
+      max-height: 180px;
       overflow-y: auto;
     }
 
@@ -438,9 +486,7 @@
       color: var(--danger);
     }
 
-    .card-tag i:hover {
-      opacity: 0.8;
-    }
+    .card-tag i:hover { opacity: 0.8; }
 
     .player-controls {
       display: flex;
@@ -535,20 +581,10 @@
       gap: 0.5rem;
     }
 
-    .history-scroll-box::-webkit-scrollbar {
-      width: 6px;
-    }
-    .history-scroll-box::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 4px;
-    }
-    .history-scroll-box::-webkit-scrollbar-thumb {
-      background: var(--border-color);
-      border-radius: 4px;
-    }
-    .history-scroll-box::-webkit-scrollbar-thumb:hover {
-      background: var(--accent-pink);
-    }
+    .history-scroll-box::-webkit-scrollbar { width: 6px; }
+    .history-scroll-box::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
+    .history-scroll-box::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+    .history-scroll-box::-webkit-scrollbar-thumb:hover { background: var(--accent-pink); }
 
     .history-pill {
       height: 38px;
@@ -571,7 +607,6 @@
       box-shadow: 0 0 10px rgba(236, 72, 153, 0.6);
     }
 
-    /* ESTILOS PARA SALA DE ESPERA */
     .waiting-container {
       text-align: center;
       padding: 3rem 1.5rem;
@@ -602,7 +637,7 @@
   <header>
     <div class="logo-title">
       <i class="fa-solid fa-dice"></i>
-      <h1>Super Bingo Las Estrellas</h1>
+      <h1>Bingo Realtime</h1>
     </div>
     <div class="header-actions">
       <button type="button" class="btn btn-danger" id="btn-exit" style="display:none;"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
@@ -614,7 +649,7 @@
     <!-- SELECTOR DE ROL -->
     <div id="screen-welcome" class="view-screen active">
       <div style="text-align: center; margin-bottom: 2rem;">
-        <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">¡Bienvenido al Super Bingo Las Estrellas!</h2>
+        <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">¡Bienvenido al Bingo Interactivo!</h2>
         <p style="color: var(--text-muted);">Elige cómo deseas jugar hoy</p>
       </div>
 
@@ -622,7 +657,7 @@
         <div class="role-card" id="btn-open-admin-auth">
           <i class="fa-solid fa-crown"></i>
           <h2>Crear / Administrar Sala (Admin)</h2>
-          <p>Configura o ingresa a un código de sala, canta las Pelotas en vivo y administra las tablas.</p>
+          <p>Configura o ingresa a un código de sala, canta las balotas en vivo y administra las tablas.</p>
         </div>
         <div class="role-card" id="btn-open-player-flow">
           <i class="fa-solid fa-ticket"></i>
@@ -662,7 +697,7 @@
 
           <div style="display: flex; flex-direction: column; gap: 0.75rem;">
             <button type="button" class="btn btn-primary" id="btn-draw-ball" style="justify-content: center; padding: 0.8rem;">
-              <i class="fa-solid fa-play"></i> SACAR Pelota
+              <i class="fa-solid fa-play"></i> SACAR BALOTA
             </button>
             <button type="button" class="btn btn-danger" id="btn-reset-game" style="justify-content: center;">
               <i class="fa-solid fa-rotate-right"></i> Reiniciar Juego
@@ -670,19 +705,36 @@
           </div>
 
           <div style="margin-top: 1.2rem;">
-            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Pelotas Salidas:</label>
+            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Balotas Salidas:</label>
             <div class="history-scroll-box" id="admin-history"></div>
           </div>
         </div>
 
-        <!-- Panel Maestro de Pelotas -->
+        <!-- Panel Maestro de Balotas -->
         <div class="panel">
           <div class="panel-header">Panel Maestro (1 - 75)</div>
           <div class="master-board" id="admin-master-board"></div>
         </div>
 
-        <!-- Panel Administrador de Jugadores, Tablas y Solicitudes -->
+        <!-- Panel Administrador de Jugadores, Tablas y Creador de Figuras -->
         <div class="panel">
+          <!-- Creador de Patrones / Figuras -->
+          <div class="panel-header" style="color: var(--accent-pink);">
+            <span><i class="fa-solid fa-shapes"></i> Figura para Ganar</span>
+          </div>
+          <div style="text-align: center; margin-bottom: 0.8rem;">
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Haz clic en las casillas para diseñar el patrón:</p>
+            <div class="pattern-grid" id="admin-pattern-grid"></div>
+            
+            <div style="display: flex; gap: 0.3rem; flex-wrap: wrap; justify-content: center; margin-top: 0.6rem;">
+              <button type="button" class="btn btn-xs btn-info" onclick="setPresetPattern('line')">Línea H.</button>
+              <button type="button" class="btn btn-xs btn-info" onclick="setPresetPattern('x')">Forma X</button>
+              <button type="button" class="btn btn-xs btn-info" onclick="setPresetPattern('corners')">Esquinas</button>
+              <button type="button" class="btn btn-xs btn-info" onclick="setPresetPattern('full')">Lleno</button>
+              <button type="button" class="btn btn-xs btn-danger" onclick="setPresetPattern('clear')">Limpiar</button>
+            </div>
+          </div>
+
           <!-- Gestor de Generación de Tablas -->
           <div class="panel-header" style="color: var(--accent-pink);">
             <span><i class="fa-solid fa-clone"></i> Generador de Tablas</span>
@@ -697,7 +749,7 @@
           <div class="panel-header" style="color: var(--accent-pink); border-bottom: 1px solid var(--border-color); padding-bottom: 0.3rem;">
             <span><i class="fa-solid fa-clock-rotate-left"></i> Solicitudes Pendientes</span>
           </div>
-          <div class="player-list" id="admin-pending-list" style="margin-bottom: 1rem; max-height: 120px;">
+          <div class="player-list" id="admin-pending-list" style="margin-bottom: 1rem; max-height: 100px;">
             <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 0.5rem;">Sin solicitudes</div>
           </div>
 
@@ -735,16 +787,21 @@
           </div>
         </div>
 
-        <!-- Panel Pelota Cantada e Historial -->
+        <!-- Panel Balota Cantada e Historial -->
         <div class="panel">
-          <div class="panel-header">Última Pelota Cantada</div>
-          
+          <div class="panel-header">Figura para Ganar</div>
+          <div style="text-align: center; margin-bottom: 1rem;">
+            <div class="pattern-mini-display" id="player-pattern-mini"></div>
+            <p style="font-size: 0.75rem; color: var(--text-muted);">Debes completar las casillas marcadas</p>
+          </div>
+
+          <div class="panel-header">Última Balota Cantada</div>
           <div class="ball-display-container">
             <span class="ball-letter" id="player-ball-letter">ESPERANDO</span>
             <div class="current-ball" id="player-current-ball">--</div>
           </div>
 
-          <div class="panel-header" style="margin-top: 1rem;">Pelotas Salidas</div>
+          <div class="panel-header" style="margin-top: 1rem;">Balotas Salidas</div>
           <div class="history-scroll-box" id="player-history"></div>
         </div>
       </div>
@@ -847,6 +904,7 @@
     let drawnBalls = [];
     let roomCardsPool = [];
     let currentRoomPlayers = {};
+    let activePattern = [0,1,2,3,4]; // Predeterminado: Primera línea horizontal
 
     // SINTETIZADOR DE SONIDO
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -890,13 +948,8 @@
       document.getElementById('btn-exit').style.display = (screenId !== 'screen-welcome') ? 'inline-flex' : 'none';
     }
 
-    function closeModal(modalId) {
-      document.getElementById(modalId).classList.remove('active');
-    }
-
-    function openModal(modalId) {
-      document.getElementById(modalId).classList.add('active');
-    }
+    function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+    function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
 
     // EVENTOS MÓDULO MODALES
     document.getElementById('btn-open-admin-auth').addEventListener('click', () => {
@@ -910,7 +963,7 @@
     document.getElementById('btn-close-join').addEventListener('click', () => closeModal('modal-join'));
     document.getElementById('btn-close-reveal-bingo').addEventListener('click', () => closeModal('modal-reveal-bingo'));
 
-    // AUTENTICACIÓN Y GENERACIÓN / INGRESO A SALA DE ADMIN
+    // AUTENTICACIÓN Y GENERACIÓN DE SALA ADMIN
     document.getElementById('btn-confirm-admin-auth').addEventListener('click', async () => {
       const pass = document.getElementById('admin-password-input').value.trim();
       const rawCode = document.getElementById('admin-custom-room-code').value.trim().toUpperCase();
@@ -921,10 +974,59 @@
       }
 
       const finalRoomCode = rawCode !== '' ? rawCode : Math.floor(1000 + Math.random() * 9000).toString();
-
       closeModal('modal-admin-auth');
       await initHostFlow(finalRoomCode);
     });
+
+    // CREADOR DE PATRONES DE FIGURA (ADMIN)
+    function renderAdminPatternGrid() {
+      const container = document.getElementById('admin-pattern-grid');
+      container.innerHTML = '';
+
+      for (let i = 0; i < 25; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'pattern-cell' + (activePattern.includes(i) ? ' active' : '');
+        cell.addEventListener('click', () => {
+          if (activePattern.includes(i)) {
+            activePattern = activePattern.filter(idx => idx !== i);
+          } else {
+            activePattern.push(i);
+          }
+          renderAdminPatternGrid();
+          savePatternToDatabase();
+        });
+        container.appendChild(cell);
+      }
+    }
+
+    window.setPresetPattern = function(preset) {
+      if (preset === 'line') activePattern = [0, 1, 2, 3, 4];
+      else if (preset === 'x') activePattern = [0, 4, 6, 8, 12, 16, 18, 20, 24];
+      else if (preset === 'corners') activePattern = [0, 4, 20, 24];
+      else if (preset === 'full') activePattern = Array.from({length: 25}, (_, i) => i);
+      else if (preset === 'clear') activePattern = [];
+
+      renderAdminPatternGrid();
+      savePatternToDatabase();
+    };
+
+    function savePatternToDatabase() {
+      if (currentRoomCode) {
+        update(ref(db, `rooms/${currentRoomCode}`), {
+          requiredPattern: activePattern
+        });
+      }
+    }
+
+    function renderPlayerMiniPattern() {
+      const container = document.getElementById('player-pattern-mini');
+      container.innerHTML = '';
+      for (let i = 0; i < 25; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'pattern-mini-cell' + (activePattern.includes(i) ? ' active' : '');
+        container.appendChild(cell);
+      }
+    }
 
     // ESCUCHAR RECLAMOS PÚBLICOS DE BINGO EN TIEMPO REAL
     function listenForGlobalBingoClaims(roomCode) {
@@ -990,7 +1092,6 @@
       });
     }
 
-    // GENERAR MATRIZ ÚNICA DE TABLA DE BINGO
     function generateSingleBingoCardData(id) {
       const columns = [
         getRandomNumbers(1, 15, 5),
@@ -1014,7 +1115,6 @@
       return { id: id, cells: cells };
     }
 
-    // OBTENER MAPA DE TABLAS ASIGNADAS (retorna objeto { cardId: playerName })
     function getAllAssignedCardMap() {
       const assignedMap = {};
       Object.keys(currentRoomPlayers).forEach(pId => {
@@ -1028,7 +1128,7 @@
       return assignedMap;
     }
 
-    // FLUJO ADMIN / HOST (CON PERSISTENCIA DE SALA)
+    // FLUJO ADMIN / HOST
     async function initHostFlow(roomCode) {
       isHost = true;
       currentRoomCode = roomCode;
@@ -1041,29 +1141,30 @@
         const roomData = snapshot.val();
         drawnBalls = roomData.drawnBalls || [];
         roomCardsPool = roomData.cardsPool || [];
+        activePattern = roomData.requiredPattern || [0,1,2,3,4];
       } else {
         await set(roomRef, {
           createdAt: Date.now(),
           drawnBalls: [],
           lastBall: null,
-          cardsPool: []
+          cardsPool: [],
+          requiredPattern: activePattern
         });
         roomCardsPool = [];
       }
 
       document.getElementById('admin-room-code').innerText = currentRoomCode;
+      renderAdminPatternGrid();
       renderMasterBoard();
       updateHistory('admin-history', drawnBalls);
       showScreen('screen-admin');
 
-      // Escuchar cambios en el pozo de tablas
       onValue(ref(db, `rooms/${currentRoomCode}/cardsPool`), (snap) => {
         roomCardsPool = snap.val() || [];
         document.getElementById('cards-pool-count').innerText = roomCardsPool.length;
         renderAdminPlayerList(currentRoomPlayers);
       });
 
-      // Escuchar jugadores
       const playersRef = ref(db, `rooms/${currentRoomCode}/players`);
       onValue(playersRef, (snap) => {
         currentRoomPlayers = snap.val() || {};
@@ -1073,7 +1174,6 @@
       listenForGlobalBingoClaims(currentRoomCode);
     }
 
-    // GENERACIÓN MASIVA DE TABLAS POR EL ADMIN
     document.getElementById('btn-generate-cards').addEventListener('click', () => {
       const inputEl = document.getElementById('input-cards-count');
       const count = parseInt(inputEl.value) || 1;
@@ -1092,7 +1192,6 @@
       alert(`¡Se han generado ${count} nueva(s) tabla(s) para la sala ${currentRoomCode}!`);
     });
 
-    // VER POZO COMPLETO DE TABLAS EN MODAL CON OPCIÓN DE ELIMINAR Y MARCA "(ASIGNADA)"
     document.getElementById('btn-view-cards').addEventListener('click', () => {
       renderCardsPoolModal();
       openModal('modal-view-cards');
@@ -1154,13 +1253,11 @@
       });
     }
 
-    // ELIMINAR TABLA DEL POZO Y DESASIGNARLA DE CUALQUIER JUGADOR
     function deleteCardFromPool(cardId) {
       if (!confirm(`¿Deseas eliminar la Tabla #${cardId} permanentemente?`)) return;
 
       const newPool = roomCardsPool.filter(c => c.id !== cardId);
 
-      // Desasignar de cualquier jugador que la tenga
       Object.keys(currentRoomPlayers).forEach(pId => {
         const p = currentRoomPlayers[pId];
         if (p.assignedCardIds && p.assignedCardIds.includes(cardId)) {
@@ -1188,7 +1285,6 @@
 
       document.getElementById('admin-players-count').innerHTML = `<i class="fa-solid fa-users"></i> ${activeKeys.length} Jugadores`;
 
-      // Solicitudes Pendientes
       if (pendingKeys.length === 0) {
         pendingListEl.innerHTML = `<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 0.5rem;">Sin solicitudes</div>`;
       } else {
@@ -1230,7 +1326,6 @@
         });
       }
 
-      // Jugadores Activos
       if (activeKeys.length === 0) {
         activeListEl.innerHTML = `<div style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 1rem;">Esperando jugadores...</div>`;
         return;
@@ -1257,7 +1352,6 @@
         infoDiv.appendChild(nameDiv);
         header.appendChild(infoDiv);
 
-        // Renderizar etiquetas de tablas asignadas con opción de desasignar
         const tagsList = document.createElement('div');
         tagsList.className = 'assigned-tags-list';
 
@@ -1364,17 +1458,8 @@
       });
     }
 
-    function approvePlayer(pId) {
-      update(ref(db, `rooms/${currentRoomCode}/players/${pId}`), {
-        status: 'approved'
-      });
-    }
-
-    function rejectPlayer(pId) {
-      update(ref(db, `rooms/${currentRoomCode}/players/${pId}`), {
-        status: 'rejected'
-      });
-    }
+    function approvePlayer(pId) { update(ref(db, `rooms/${currentRoomCode}/players/${pId}`), { status: 'approved' }); }
+    function rejectPlayer(pId) { update(ref(db, `rooms/${currentRoomCode}/players/${pId}`), { status: 'rejected' }); }
 
     function renderMasterBoard() {
       const boardEl = document.getElementById('admin-master-board');
@@ -1389,7 +1474,7 @@
 
     document.getElementById('btn-draw-ball').addEventListener('click', () => {
       if (drawnBalls.length >= 75) {
-        alert("¡Ya se han sacado todas las Pelotas!");
+        alert("¡Ya se han sacado todas las balotas!");
         return;
       }
 
@@ -1413,9 +1498,8 @@
       });
     });
 
-    // REINICIAR PARTIDA MANTENIENDO LAS TABLAS GENERADAS EN LA SALA
     document.getElementById('btn-reset-game').addEventListener('click', () => {
-      if (confirm("¿Seguro que deseas reiniciar el juego? Se limpiarán las Pelotas pero se conservarán las tablas de la sala.")) {
+      if (confirm("¿Seguro que deseas reiniciar el juego? Se limpiarán las balotas pero se conservarán las tablas de la sala.")) {
         drawnBalls = [];
         document.getElementById('admin-current-ball').innerText = '--';
         document.getElementById('admin-ball-letter').innerText = 'LISTO';
@@ -1430,7 +1514,7 @@
       }
     });
 
-    // FLUJO JUGADOR CON ASIGNACIÓN DE TABLAS
+    // FLUJO JUGADOR
     document.getElementById('btn-open-player-flow').addEventListener('click', () => openModal('modal-join'));
 
     document.getElementById('btn-confirm-join').addEventListener('click', () => {
@@ -1447,7 +1531,6 @@
       playerId = 'player_' + Math.random().toString(36).substr(2, 9);
       isHost = false;
 
-      // Registrar jugador
       const myPlayerRef = ref(db, `rooms/${currentRoomCode}/players/${playerId}`);
       set(myPlayerRef, {
         name: playerName,
@@ -1458,7 +1541,6 @@
       closeModal('modal-join');
       showScreen('screen-waiting');
 
-      // Escuchar cambios del jugador
       onValue(myPlayerRef, (snapshot) => {
         const val = snapshot.val();
         if (!val) return;
@@ -1482,7 +1564,6 @@
         }
       });
 
-      // Escuchar estado global de la sala
       const roomRef = ref(db, `rooms/${currentRoomCode}`);
       onValue(roomRef, (snapshot) => {
         if (!snapshot.exists()) {
@@ -1493,7 +1574,10 @@
 
         const data = snapshot.val();
         roomCardsPool = data.cardsPool || [];
+        activePattern = data.requiredPattern || [0,1,2,3,4];
         const serverDrawnBalls = data.drawnBalls || [];
+
+        renderPlayerMiniPattern();
 
         if (data.lastBall && (!drawnBalls.length || drawnBalls[drawnBalls.length - 1] !== data.lastBall)) {
           playBeep(523.25, 'sine', 0.2);
@@ -1562,18 +1646,16 @@
       });
     }
 
-    // VERIFICACIÓN AUTOMÁTICA DE PATRONES DE BINGO Y VALIDEZ
+    // VERIFICACIÓN ESTRICTA DE PATRÓN REQUERIDO
     function checkBingoValidation() {
       const cardContainers = document.querySelectorAll('#player-cards-wrapper .single-card-container');
       const cardsDataResult = [];
       let invalidMarkFound = false;
       let winningCardIndices = [];
 
-      const winningLines = [
-        [0, 1, 2, 3, 4], [5, 6, 7, 8, 9], [10, 11, 12, 13, 14], [15, 16, 17, 18, 19], [20, 21, 22, 23, 24],
-        [0, 5, 10, 15, 20], [1, 6, 11, 16, 21], [2, 7, 12, 17, 22], [3, 8, 13, 18, 23], [4, 9, 14, 19, 24],
-        [0, 6, 12, 18, 24], [4, 8, 12, 16, 20]
-      ];
+      if (!activePattern || activePattern.length === 0) {
+        return { isValid: false, noPatternSet: true, cardsData: [] };
+      }
 
       cardContainers.forEach((container) => {
         const cardId = container.dataset.cardId;
@@ -1602,14 +1684,9 @@
           });
         });
 
-        let cardWinningIndices = [];
-        winningLines.forEach(line => {
-          if (line.every(i => markedIndices.includes(i))) {
-            line.forEach(i => {
-              if (!cardWinningIndices.includes(i)) cardWinningIndices.push(i);
-            });
-          }
-        });
+        // Comprobar si el patrón activo se cumple exactamente
+        const patternMet = activePattern.every(i => markedIndices.includes(i));
+        let cardWinningIndices = patternMet ? [...activePattern] : [];
 
         cardsDataResult.push({
           cardId: cardId,
@@ -1617,7 +1694,7 @@
           winningIndices: cardWinningIndices
         });
 
-        if (cardWinningIndices.length > 0) {
+        if (patternMet) {
           winningCardIndices.push(cardWinningIndices);
         }
       });
@@ -1632,13 +1709,18 @@
     document.getElementById('btn-claim-bingo').addEventListener('click', () => {
       const validation = checkBingoValidation();
 
+      if (validation.noPatternSet) {
+        alert("❌ El Administrador aún no ha configurado una figura para ganar en esta partida.");
+        return;
+      }
+
       if (validation.invalidMarkFound) {
         alert("❌ ¡Bingo no válido! Tienes casillas marcadas con números que aún no han sido cantados.");
         return;
       }
 
       if (!validation.isValid) {
-        alert("❌ ¡Aún no tienes Bingo! Debes completar al menos una línea horizontal, vertical o diagonal válida.");
+        alert("❌ ¡Aún no tienes el patrón requerido! Debes completar la figura exacta configurada por el Cantador.");
         return;
       }
 
@@ -1670,7 +1752,6 @@
       return arr;
     }
 
-    // ACTUALIZAR HISTORIAL VERTICAL DE PelotaS CON SCROLL
     function updateHistory(elementId, balls) {
       const container = document.getElementById(elementId);
       container.innerHTML = '';
